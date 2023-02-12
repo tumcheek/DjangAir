@@ -140,3 +140,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = str(getenv('EMAIL'))
 EMAIL_HOST_PASSWORD = str(getenv('PASSWORD_EMAIL'))
 EMAIL_PORT = 587
+
+AUTH_USER_MODEL = 'main.PassengerModel'
