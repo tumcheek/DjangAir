@@ -63,3 +63,4 @@ class OptionModel(models.Model):
 class LuggageModel(models.Model):
     weight = models.FloatField()
     price = models.ForeignKey(PriceModel, on_delete=models.CASCADE, related_name='luggage_prices')
+    ticket = models.ForeignKey(TicketModel, on_delete=models.CASCADE, related_name='luggage')
