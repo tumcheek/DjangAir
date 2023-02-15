@@ -71,4 +71,5 @@ class OptionFactory(DjangoModelFactory):
 class LuggageModel(models.Model):
     weight = factory.Faker('pyfloat')
     price = factory.SubFactory(PriceFactory)
+    ticket = factory.SubFactory(TicketFactory)
 
