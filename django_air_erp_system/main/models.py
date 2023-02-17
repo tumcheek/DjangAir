@@ -31,7 +31,7 @@ class FlightModel(models.Model):
     end_location = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
-    is_cancel = models.BinaryField(default=False)
+    is_cancel = models.BooleanField()
     slug = models.SlugField()
 
 
