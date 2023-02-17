@@ -39,7 +39,7 @@ class FlightFactory(DjangoModelFactory):
     end_location = factory.Faker('city')
     start_date = factory.Faker('date')
     end_date = factory.Faker('date')
-    is_cancel = factory.Faker('bool')
+    is_cancel = factory.Faker('pybool')
     slug = factory.Faker('slug')
 
 
@@ -51,7 +51,7 @@ class PassengerFactory(DjangoModelFactory):
 
 
 class TicketFactory(DjangoModelFactory):
-    class Model:
+    class Meta:
         model = TicketModel
     flight = factory.SubFactory(FlightFactory)
     passenger = factory.SubFactory(PassengerFactory)
@@ -60,7 +60,7 @@ class TicketFactory(DjangoModelFactory):
 
 
 class OptionFactory(DjangoModelFactory):
-    class Model:
+    class Meta:
         model = OptionModel
     name = factory.Faker('word')
     description = factory.Faker('text')
@@ -69,6 +69,8 @@ class OptionFactory(DjangoModelFactory):
 
 
 class LuggageFactory(DjangoModelFactory):
+    class Meta:
+        model = LuggageModel
     weight = factory.Faker('pyfloat')
     price = factory.SubFactory(PriceFactory)
     ticket = factory.SubFactory(TicketFactory)
