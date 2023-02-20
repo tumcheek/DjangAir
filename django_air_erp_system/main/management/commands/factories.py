@@ -7,7 +7,6 @@ class AirplaneFactory(DjangoModelFactory):
     class Meta:
         model = AirplaneModel
     name = factory.Faker('name')
-    slug = factory.Faker('slug')
 
 
 class SeatTypeFactory(DjangoModelFactory):
@@ -37,10 +36,11 @@ class FlightFactory(DjangoModelFactory):
     price = factory.SubFactory(PriceFactory)
     start_location = factory.Faker('city')
     end_location = factory.Faker('city')
-    start_date = factory.Faker('date')
-    end_date = factory.Faker('date')
+    start_date = factory.Faker('date_time_this_year')
+    end_date = factory.Faker('date_time_this_year')
+    start_time = factory.Faker('time')
+    end_time = factory.Faker('time')
     is_cancel = factory.Faker('pybool')
-    slug = factory.Faker('slug')
 
 
 class PassengerFactory(DjangoModelFactory):
