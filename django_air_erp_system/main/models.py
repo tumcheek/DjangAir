@@ -2,11 +2,17 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 from .managers import UserManager
+from django.utils.text import slugify
 
 
 class AirplaneModel(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField()
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super(AirplaneModel, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -46,7 +52,12 @@ class FlightModel(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     is_cancel = models.BooleanField()
-    slug = models.SlugField()
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify([self.start_location, self.end_location])
+        super(FlightModel, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'From {self.start_location} to {self.end_location}'
