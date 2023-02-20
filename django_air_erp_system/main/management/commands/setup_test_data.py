@@ -28,7 +28,7 @@ class Command(BaseCommand):
         seat_types = create_fake_seats_type(SEAT_TYPES_NAMES)
         seats = create_fake_seats(SEAT_NUMBERS, seat_types, airplanes)
         prices = create_fake_prices(NUM_PRICES, PRICES_LIST)
-        flights = create_fake_flights(NUM_FLIGHTS, airplanes, prices)
+        flights = create_fake_flights(NUM_FLIGHTS, airplanes, prices, seats)
         passengers = create_fake_passengers(NUM_PASSENGERS, 'password')
         tickets = create_fake_tickets(NUM_TICKETS, passengers, flights, seats)
         create_fake_options(NUM_OPTIONS, flights, prices)

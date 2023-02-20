@@ -52,13 +52,14 @@ def create_fake_prices(num_prices, prices_list):
     return prices
 
 
-def create_fake_flights(num_flights, airplanes, prices):
+def create_fake_flights(num_flights, airplanes, prices, seats):
     flights = []
     for _ in range(num_flights):
         flight = FlightFactory(
             airplane=random.choice(airplanes),
             price=random.choice(prices),
         )
+        flight.seats.add(*seats)
         flights.append(flight)
     return flights
 
