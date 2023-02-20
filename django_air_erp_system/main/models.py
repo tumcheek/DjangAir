@@ -8,9 +8,15 @@ class AirplaneModel(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField()
 
+    def __str__(self):
+        return self.name
+
 
 class SeatTypeModel(models.Model):
     seat_type = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.seat_type
 
 
 class SeatModel(models.Model):
@@ -18,9 +24,15 @@ class SeatModel(models.Model):
     airplane = models.ForeignKey(AirplaneModel, on_delete=models.CASCADE, related_name='seats')
     seat_number = models.IntegerField()
 
+    def __str__(self):
+        return str(self.seat_number)
+
 
 class PriceModel(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def __str__(self):
+        return str(self.price)
 
 
 class FlightModel(models.Model):
@@ -31,8 +43,13 @@ class FlightModel(models.Model):
     end_location = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
     is_cancel = models.BooleanField()
     slug = models.SlugField()
+
+    def __str__(self):
+        return f'From {self.start_location} to {self.end_location}'
 
 
 class PassengerModel(AbstractUser):
@@ -52,6 +69,9 @@ class TicketModel(models.Model):
     seat = models.ForeignKey(SeatModel, on_delete=models.CASCADE)
     slug = models.SlugField()
 
+    def __str__(self):
+        return str(self.passenger)
+
 
 class OptionModel(models.Model):
     name = models.CharField(max_length=255)
@@ -59,8 +79,14 @@ class OptionModel(models.Model):
     flight = models.ForeignKey(FlightModel, on_delete=models.CASCADE, related_name='options')
     price = models.ForeignKey(PriceModel, on_delete=models.CASCADE, related_name='option_prices')
 
+    def __str__(self):
+        return self.name
+
 
 class LuggageModel(models.Model):
     weight = models.FloatField()
     price = models.ForeignKey(PriceModel, on_delete=models.CASCADE, related_name='luggage_prices')
     ticket = models.ForeignKey(TicketModel, on_delete=models.CASCADE, related_name='luggage')
+
+    def __str__(self):
+        return self.ticket.passenger
