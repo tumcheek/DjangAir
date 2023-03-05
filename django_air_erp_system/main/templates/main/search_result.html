@@ -1,0 +1,29 @@
+{% extends '../base.html' %}
+{% block title%}Flights{% endblock %}
+{% block content %}
+{% if is_flights %}
+<h1>Select flight</h1>
+{% for flight in flights %}
+<div class="flight-info">
+    <p class="flight-destination">{{ flight.start_location }} - {{ flight.end_location }}</p>
+    <p class="flight-available-seats">Available seats {{ flight.available_seats }}</p>
+    <p class="flight-date">{{ flight.start_date }} {{ flight.start_time }} - {{ flight.end_date }} {{ flight.end_time }}</p>
+    <p class="flight-price">Price - {{ flight.price }}</p>
+    <div class="options">
+        <h3>Options</h3>
+            {% for option in flight.options %}
+        <div class="option-info">
+            <p class="option-name">{{ option.name }}</p>
+            <p class="option-description">{{ option.description }}</p>
+            <p class="option-price">{{ option.price }}</p>
+        </div>
+    {% endfor %}
+    </div>
+
+    <a href="{% url 'main:book_ticket' flight.slug  flight.start_date 1 %}">Select flight</a>
+</div>
+{% endfor %}
+{% else %}
+<h2>Sorry, we do not have flights</h2>
+{% endif %}
+{% endblock %}
