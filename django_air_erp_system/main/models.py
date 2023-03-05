@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils.text import slugify
 
 from .managers import UserManager
-from django.utils.text import slugify
 
 
 class AirplaneModel(models.Model):
@@ -81,7 +81,7 @@ class TicketModel(models.Model):
     slug = models.SlugField()
 
     def __str__(self):
-        return str(self.passenger)
+        return str(self.flight)
 
 
 class OptionModel(models.Model):
@@ -100,4 +100,4 @@ class LuggageModel(models.Model):
     ticket = models.ForeignKey(TicketModel, on_delete=models.CASCADE, related_name='luggage')
 
     def __str__(self):
-        return self.ticket.passenger
+        return str(self.ticket.passenger)
