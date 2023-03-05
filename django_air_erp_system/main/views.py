@@ -22,7 +22,7 @@ def get_flights(request, start_location, end_location, start_date, passenger_num
         'flights': flights,
         'is_flights': is_flights
     }
-    return render(request, 'main/flights_result.html', context)
+    return render(request, 'main/search_result.html', context)
 
 
 class IndexView(View):
