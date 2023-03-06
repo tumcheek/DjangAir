@@ -34,13 +34,14 @@ def create_fake_seats_type(seat_types_names):
 
 def create_fake_seats(seat_numbers, seat_types, airplanes):
     seats = []
-    for i in range(1, seat_numbers + 1):
-        seat = SeatFactory(
-            seat_number=i,
-            seat_type=random.choice(seat_types),
-            airplane=random.choice(airplanes)
-        )
-        seats.append(seat)
+    for airplane in airplanes:
+        for i in range(1, seat_numbers + 1):
+            seat = SeatFactory(
+                seat_number=i,
+                seat_type=random.choice(seat_types),
+                airplane=airplane
+            )
+            seats.append(seat)
     return seats
 
 
@@ -52,15 +53,17 @@ def create_fake_prices(num_prices, prices_list):
     return prices
 
 
-def create_fake_flights(num_flights, airplanes, prices, seats):
+def create_fake_flights(num_flights, airplanes, prices):
     flights = []
-    for _ in range(num_flights):
-        flight = FlightFactory(
-            airplane=random.choice(airplanes),
-            price=random.choice(prices),
-        )
-        flight.seats.add(*seats)
-        flights.append(flight)
+    for airplane in airplanes:
+        for _ in range(num_flights):
+            flight = FlightFactory(
+                airplane=airplane,
+                price=random.choice(prices),
+            )
+            airplane_seats = [seat.id for seat in airplane.seats.all()]
+            flight.seats.add(*airplane_seats)
+            flights.append(flight)
     return flights
 
 
