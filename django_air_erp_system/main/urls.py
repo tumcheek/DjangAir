@@ -10,4 +10,9 @@ urlpatterns = [
         views.get_flights,
         name='search_result'
     ),
+    path(
+        'booking/<slug:slug_info>/<str:start_date>/<int:passenger_number>/',
+        views.BookView.as_view(),
+        name='book_ticket'
+    )
 ]
