@@ -20,7 +20,7 @@
     {% endfor %}
     </div>
 
-    <a href="{% url 'main:book_ticket' flight.slug  flight.start_date 1 %}">Select flight</a>
+    <a href="{% url 'main:book_ticket' flight.slug  flight.start_date passenger_number %}">Select flight</a>
 </div>
 {% endfor %}
 {% else %}
