@@ -20,7 +20,8 @@ def get_flights(request, start_location, end_location, start_date, passenger_num
 
     context = {
         'flights': flights,
-        'is_flights': is_flights
+        'is_flights': is_flights,
+        'passenger_number': passenger_number
     }
     return render(request, 'main/search_result.html', context)
 
