@@ -1,3 +1,7 @@
+from django.utils.crypto import get_random_string
+from .models import PassengerModel, SeatTypeModel
+
+
 def get_flight_options(flight):
     _options = flight.options.all()
     options = []
@@ -38,3 +42,28 @@ def get_flights_info(flights_query, passengers):
             continue
         flights.append(flight)
     return flights
+
+
+def get_type_of_seats():
+    _seats_type = SeatTypeModel.objects.all()
+    seats_type = [(seat_type.seat_type, seat_type.pk) for seat_type in _seats_type]
+    return seats_type
+
+
+def get_unavailable_seats(flight):
+    flight_tickets = flight.tickets.all()
+    tickets_seat = [ticket.seat.seat_number for ticket in flight_tickets]
+    return tickets_seat
+
+
+def get_all_seats(flight):
+    seats_type = get_type_of_seats()
+    tickets_seat = get_unavailable_seats(flight)
+    seats_dict = {}
+    for seat_type, type_pk in seats_type:
+        seats = flight.seats.filter(seat_type=type_pk)
+        seats_dict[seat_type] = [{'number': seat.seat_number,
+                                  'is_available': False if seat.seat_number in tickets_seat else True}
+                                 for seat in seats]
+
+    return seats_dict
