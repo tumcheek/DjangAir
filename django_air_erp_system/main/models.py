@@ -31,7 +31,7 @@ class SeatModel(models.Model):
     seat_number = models.IntegerField()
 
     def __str__(self):
-        return str(self.seat_number)
+        return f'{self.airplane.name}_{self.seat_type}_{self.seat_number}'
 
 
 class PriceModel(models.Model):
@@ -78,7 +78,12 @@ class TicketModel(models.Model):
     flight = models.ForeignKey(FlightModel, on_delete=models.CASCADE, related_name='tickets')
     passenger = models.ForeignKey(PassengerModel, on_delete=models.CASCADE)
     seat = models.ForeignKey(SeatModel, on_delete=models.CASCADE)
-    slug = models.SlugField()
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify([self.flight.start_location, self.flight.end_location, self.passenger.pk])
+        super(TicketModel, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.flight)
