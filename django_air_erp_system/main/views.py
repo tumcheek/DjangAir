@@ -1,16 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views import View
 from django.views.decorators.http import require_http_methods
 
 from .forms import FlightForm
-from .models import FlightModel
-from .utils import get_flights_info
+from . import models
+from .utils import get_flights_info, get_flight_info, get_all_seats, get_flight_options
 
 
 @require_http_methods(["GET"])
 def get_flights(request, start_location, end_location, start_date, passenger_number):
-    flights_query = FlightModel.objects.filter(
+    flights_query = models.FlightModel.objects.filter(
         start_location=start_location,
         end_location=end_location,
         start_date=start_date
@@ -50,3 +50,21 @@ class IndexView(View):
             'form': form
         }
         return render(request, self.template_name, context)
+
+
+class BookView(View):
+    template_name = 'main/ticket_book.html'
+
+    def get(self, request, slug_info, start_date, passenger_number):
+        flight = models.FlightModel.objects.get(slug=slug_info)
+        seats = get_all_seats(flight)
+        flight_info = get_flight_info(flight)
+        options = get_flight_options(flight)
+        context = {
+            'flight': flight_info,
+            'passenger_range': range(passenger_number),
+            'seats': seats,
+            'options': options
+        }
+        return render(request, self.template_name, context)
+
