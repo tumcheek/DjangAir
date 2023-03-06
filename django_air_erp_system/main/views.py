@@ -53,7 +53,7 @@ class IndexView(View):
 
 
 class BookView(View):
-    template_name = 'main/ticket_book.html'
+    template_name = 'main/book_ticket.html'
 
     def get(self, request, slug_info, start_date, passenger_number):
         flight = models.FlightModel.objects.get(slug=slug_info)
