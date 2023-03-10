@@ -19,7 +19,17 @@ class AirplaneModel(models.Model):
 
 
 class SeatTypeModel(models.Model):
-    seat_type = models.CharField(max_length=255)
+    class TypeName(models.TextChoices):
+        ECONOMY = 'EC', 'Economy class'
+        PREMIUM = 'PR', 'Premium economy class'
+        BUSINESS = 'BU', 'Business class'
+        FIRST = 'FI', 'First class'
+
+    seat_type = models.CharField(
+        max_length=2,
+        choices=TypeName.choices,
+        default=TypeName.ECONOMY
+    )
 
     def __str__(self):
         return self.seat_type
@@ -51,7 +61,7 @@ class FlightModel(models.Model):
     end_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    is_cancel = models.BooleanField()
+    is_cancelled = models.BooleanField()
     slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -65,8 +75,6 @@ class FlightModel(models.Model):
 
 class PassengerModel(AbstractUser):
     username = None
-    first_name = None
-    last_name = None
     email = models.EmailField(unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     USERNAME_FIELD = 'email'
