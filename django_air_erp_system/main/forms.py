@@ -1,7 +1,7 @@
 from django import forms
 
 
-class FlightForm(forms.Form):
+class SearchFlightForm(forms.Form):
     start_location = forms.CharField(max_length=255)
     end_location = forms.CharField(max_length=255)
     start_date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date'}))

@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.urls import reverse
 from django.views import View
 from django.views.decorators.http import require_http_methods
 
-from .forms import FlightForm
+from .forms import SearchFlightForm
 from . import models
 from .utils import get_flights_info, get_flight_info, get_all_seats, get_flight_options
 
@@ -30,14 +30,14 @@ class IndexView(View):
     template_name = 'main/index.html'
 
     def get(self, request):
-        form = FlightForm()
+        form = SearchFlightForm()
         context = {
             'form': form
         }
         return render(request, self.template_name, context)
 
     def post(self, request):
-        form = FlightForm(request.POST)
+        form = SearchFlightForm(request.POST)
         if form.is_valid():
             query_info = {
                 'start_location': form.cleaned_data['start_location'],
@@ -68,4 +68,3 @@ class BookView(View):
             'options': options
         }
         return render(request, self.template_name, context)
-
