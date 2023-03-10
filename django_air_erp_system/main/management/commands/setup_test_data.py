@@ -1,7 +1,8 @@
+import random
 from django.db import transaction
 from django.core.management.base import BaseCommand
 
-from .functions_for_fake_data_create import *
+from . import fake_data_creator as data_creator
 
 
 NUM_AIRPLANES = 25
@@ -23,13 +24,13 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write("Deleting old data...")
 
-        delete_all_data()
-        airplanes = create_fake_airplanes(NUM_AIRPLANES)
-        seat_types = create_fake_seats_type(SEAT_TYPES_NAMES)
-        seats = create_fake_seats(SEAT_NUMBERS, seat_types, airplanes)
-        prices = create_fake_prices(NUM_PRICES, PRICES_LIST)
-        flights = create_fake_flights(NUM_FLIGHTS, airplanes, prices)
-        passengers = create_fake_passengers(NUM_PASSENGERS, 'password')
-        tickets = create_fake_tickets(NUM_TICKETS, passengers, flights, seats)
-        create_fake_options(NUM_OPTIONS, flights, prices)
-        create_fake_luggages(NUM_LUGGAGE, tickets, prices)
+        data_creator.delete_all_data()
+        airplanes = data_creator.create_fake_airplanes(NUM_AIRPLANES)
+        seat_types = data_creator.create_fake_seats_type(SEAT_TYPES_NAMES)
+        seats = data_creator.create_fake_seats(SEAT_NUMBERS, seat_types, airplanes)
+        prices = data_creator.create_fake_prices(NUM_PRICES, PRICES_LIST)
+        flights = data_creator.create_fake_flights(NUM_FLIGHTS, airplanes, prices)
+        passengers = data_creator.create_fake_passengers(NUM_PASSENGERS, 'password')
+        tickets = data_creator.create_fake_tickets(NUM_TICKETS, passengers, flights, seats)
+        data_creator.create_fake_options(NUM_OPTIONS, flights, prices)
+        data_creator.create_fake_luggages(NUM_LUGGAGE, tickets, prices)

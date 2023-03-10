@@ -1,23 +1,23 @@
 import factory
 from factory.django import DjangoModelFactory
-from ...models import *
+from ... import models
 
 
 class AirplaneFactory(DjangoModelFactory):
     class Meta:
-        model = AirplaneModel
+        model = models.AirplaneModel
     name = factory.Faker('name')
 
 
 class SeatTypeFactory(DjangoModelFactory):
     class Meta:
-        model = SeatTypeModel
+        model = models.SeatTypeModel
     seat_type = factory.Faker('word')
 
 
 class SeatFactory(DjangoModelFactory):
     class Meta:
-        model = SeatModel
+        model = models.SeatModel
     seat_type = factory.SubFactory(SeatTypeFactory)
     airplane = factory.SubFactory(AirplaneFactory)
     seat_number = factory.Faker('pyint')
@@ -25,13 +25,13 @@ class SeatFactory(DjangoModelFactory):
 
 class PriceFactory(DjangoModelFactory):
     class Meta:
-        model = PriceModel
+        model = models.PriceModel
     price = factory.Faker('pydecimal')
 
 
 class FlightFactory(DjangoModelFactory):
     class Meta:
-        model = FlightModel
+        model = models.FlightModel
     airplane = factory.SubFactory(AirplaneFactory)
     price = factory.SubFactory(PriceFactory)
     start_location = factory.Faker('city')
@@ -40,19 +40,21 @@ class FlightFactory(DjangoModelFactory):
     end_date = factory.Faker('date_time_this_year')
     start_time = factory.Faker('time')
     end_time = factory.Faker('time')
-    is_cancel = factory.Faker('pybool')
+    is_cancelled = factory.Faker('pybool')
 
 
 class PassengerFactory(DjangoModelFactory):
     class Meta:
-        model = PassengerModel
+        model = models.PassengerModel
+    first_name = factory.Faker('first_name')
+    last_name = factory.Faker('last_name')
     email = factory.Faker('email')
     password = factory.PostGenerationMethodCall('set_password', 'defaultpassword')
 
 
 class TicketFactory(DjangoModelFactory):
     class Meta:
-        model = TicketModel
+        model = models.TicketModel
     flight = factory.SubFactory(FlightFactory)
     passenger = factory.SubFactory(PassengerFactory)
     seat = factory.SubFactory(SeatFactory)
@@ -61,7 +63,7 @@ class TicketFactory(DjangoModelFactory):
 
 class OptionFactory(DjangoModelFactory):
     class Meta:
-        model = OptionModel
+        model = models.OptionModel
     name = factory.Faker('word')
     description = factory.Faker('text')
     flight = factory.SubFactory(FlightFactory)
@@ -70,8 +72,7 @@ class OptionFactory(DjangoModelFactory):
 
 class LuggageFactory(DjangoModelFactory):
     class Meta:
-        model = LuggageModel
+        model = models.LuggageModel
     weight = factory.Faker('pyfloat')
     price = factory.SubFactory(PriceFactory)
     ticket = factory.SubFactory(TicketFactory)
-
