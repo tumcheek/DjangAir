@@ -14,5 +14,11 @@ urlpatterns = [
         'booking/<slug:slug_info>/<str:start_date>/<int:passenger_number>/',
         views.BookView.as_view(),
         name='book_ticket'
+    ),
+
+    path(
+        'booking/<slug:slug_info>/<str:start_date>/<int:passenger_number>/<str:error>',
+        views.BookView.as_view(),
+        name='book_ticket_error'
     )
 ]
