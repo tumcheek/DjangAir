@@ -1,10 +1,13 @@
-from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
 
 from .forms import SearchFlightForm
 from . import models
+from .form_validator import is_form_data_valid
 
 
 def get_flight_options(flight):
@@ -74,6 +77,32 @@ def get_all_seats(flight):
     return seats_dict
 
 
+def check_post_fields(request, required_fields, length):
+    for field in required_fields:
+        if field not in request.POST:
+            raise ValidationError(f'Field {field.replace("[]", "")} is required.')
+        _field = request.POST.getlist(field)
+        if len(_field) != length:
+            raise ValidationError(f'Input {field.replace("[]", "")} for all passengers.')
+    return True
+
+
+def is_user_exist(email):
+    user = models.PassengerModel.objects.filter(email=email)
+    if user:
+        return True
+    else:
+        return False
+
+
+def generate_password(length=12):
+    """
+    Generates a random password of the given length
+    """
+    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-='
+    return get_random_string(length=length, allowed_chars=allowed_chars)
+
+
 @require_http_methods(["GET"])
 def get_flights(request, start_location, end_location, start_date, passenger_number):
     flights_query = models.FlightModel.objects.filter(
@@ -122,15 +151,32 @@ class IndexView(View):
 class BookView(View):
     template_name = 'main/book_ticket.html'
 
-    def get(self, request, slug_info, start_date, passenger_number):
+    def get(self, request, slug_info, start_date, passenger_number, error=None):
         flight = models.FlightModel.objects.get(slug=slug_info)
         seats = get_all_seats(flight)
         flight_info = get_flight_info(flight)
         options = get_flight_options(flight)
         context = {
+            'error': error,
             'flight': flight_info,
             'passenger_range': range(passenger_number),
             'seats': seats,
             'options': options
         }
         return render(request, self.template_name, context)
+
+    def post(self, request, slug_info, start_date, passenger_number, error=None):
+        flight = models.FlightModel.objects.get(slug=slug_info)
+        required_fields = ['First name[]', 'Last name[]', 'email[]']
+        try:
+            check_post_fields(request, required_fields, passenger_number)
+            form = request.POST
+            is_form_data_valid(form, passenger_number, flight)
+        except ValidationError as e:
+            context = {
+                'slug_info': slug_info,
+                'start_date': start_date,
+                'passenger_number': passenger_number,
+                'error': e.message
+            }
+            return redirect(reverse('main:book_ticket_error', kwargs=context))
