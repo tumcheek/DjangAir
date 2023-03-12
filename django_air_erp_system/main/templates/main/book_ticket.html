@@ -6,6 +6,9 @@
 </div>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    {% if error %}
+        <h3 class="error">{{ error }}</h3>
+    {% endif %}
     {% for i in passenger_range %}
     <div class="ticket">
         <label>First name <input required name="First name[]" type="text"></label>
@@ -26,7 +29,7 @@
             <h3 class="option-name">{{ option.name }}</h3>
             <p class="option-description">{{ option.description }}</p>
             <p class="option-price">{{ option.price }}</p>
-            <input type="checkbox" name="options" value="{{ option.id }}">
+            <input type="checkbox" name="options_{{ i }}" value="{{ option.id }}">
         </div>
         {% endfor %}
     </div>
