@@ -82,21 +82,6 @@ class PassengerModel(AbstractUser):
     objects = UserManager()
 
 
-class TicketModel(models.Model):
-    flight = models.ForeignKey(FlightModel, on_delete=models.CASCADE, related_name='tickets')
-    passenger = models.ForeignKey(PassengerModel, on_delete=models.CASCADE)
-    seat = models.ForeignKey(SeatModel, on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify([self.flight.start_location, self.flight.end_location, self.passenger.pk])
-        super(TicketModel, self).save(*args, **kwargs)
-
-    def __str__(self):
-        return str(self.flight)
-
-
 class OptionModel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -105,6 +90,22 @@ class OptionModel(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TicketModel(models.Model):
+    flight = models.ForeignKey(FlightModel, on_delete=models.CASCADE, related_name='tickets')
+    passenger = models.ForeignKey(PassengerModel, on_delete=models.CASCADE)
+    seat = models.ForeignKey(SeatModel, on_delete=models.CASCADE)
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True)
+    options = models.ManyToManyField(OptionModel, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify([self.flight.start_location, self.flight.end_location, self.passenger.pk])
+        super(TicketModel, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.flight)
 
 
 class LuggageModel(models.Model):
