@@ -101,7 +101,9 @@ class TicketModel(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify([self.flight.start_location, self.flight.end_location, self.passenger.pk])
+            self.slug = slugify(
+                [self.flight.start_location, self.flight.end_location, self.seat.pk, self.passenger.pk]
+            )
         super(TicketModel, self).save(*args, **kwargs)
 
     def __str__(self):
