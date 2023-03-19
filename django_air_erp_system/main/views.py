@@ -1,13 +1,18 @@
+import stripe
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.http import require_http_methods
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.conf import settings
+from django.views.generic import TemplateView
 
 from .forms import SearchFlightForm
 from . import models
 from .form_validator import is_form_data_valid
+from .tasks import send_mail_task
 
 
 def get_flight_options(flight):
@@ -103,6 +108,22 @@ def generate_password(length=12):
     return get_random_string(length=length, allowed_chars=allowed_chars)
 
 
+def get_mail_subject(name, subject):
+    try:
+        mail_subject = models.EmailSubjectModel.objects.get(name=name)
+    except ObjectDoesNotExist:
+        mail_subject = subject
+    return mail_subject
+
+
+def get_options_price(options):
+    _sum = 0
+    if options.count() > 0:
+        for option in options:
+            _sum += option.price.price
+    return _sum
+
+
 @require_http_methods(["GET"])
 def get_flights(request, start_location, end_location, start_date, passenger_number):
     flights_query = models.FlightModel.objects.filter(
@@ -180,3 +201,74 @@ class BookView(View):
                 'error': e.message
             }
             return redirect(reverse('main:book_ticket_error', kwargs=context))
+
+        total = 0
+        for i in range(passenger_number):
+            first_name = form.getlist('First name[]')[i]
+            last_name = form.getlist('Last name[]')[i]
+            email = form.getlist('email[]')[i]
+            seat = form.get(f'seat_{i}')
+            options = form.getlist(f'options_{i}')
+
+            if not is_user_exist(email):
+                user_password = generate_password()
+                models.PassengerModel.objects.create_user(
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    password=user_password
+                )
+                context = {
+                    'email': email,
+                    'password': user_password
+
+                }
+                message = render_to_string(
+                    'main/email_messages/auto_registration_message.html',
+                    context=context
+                )
+                registration_mail_subject = get_mail_subject('registration', 'Registration')
+                send_mail_task.delay(message, email, registration_mail_subject)
+
+            ticket = models.TicketModel.objects.create(
+                flight=flight,
+                passenger=models.PassengerModel.objects.get(email=email),
+                seat=flight.seats.get(seat_number=seat)
+            )
+            ticket.options.add(*options)
+            ticket_context = {
+                'start_date': flight.start_date,
+                'start_time': flight.start_time,
+                'start_location': flight.start_location,
+                'end_location': flight.end_location,
+                'flight_number': flight.pk,
+                'first_name': ticket.passenger.first_name,
+                'last_name': ticket.passenger.last_name,
+                'seat_number': ticket.seat.seat_number,
+                'ticket_number': ticket.pk
+            }
+
+            ticket_message = render_to_string(
+                'main/email_messages/ticket_info.html',
+                context=ticket_context
+            )
+            ticket_mail_subject = get_mail_subject('ticket', 'Ticket')
+            send_mail_task.delay(ticket_message, email, ticket_mail_subject)
+            flight_price = flight.price.price
+            options_price = get_options_price(ticket.options.all())
+            total += options_price + flight_price
+            bill_context = {
+                'flight_price': flight_price,
+                'options_price': options_price,
+                'total': options_price + flight_price,
+            }
+            bill_message = render_to_string(
+                'main/email_messages/bill.html',
+                bill_context
+            )
+            bill_mail_subject = get_mail_subject('bill', 'Bill')
+
+            send_mail_task.delay(bill_message, email, bill_mail_subject)
+        total = int(total*100)
+
+        return redirect('main:payment', total=total, name=slug_info, amount=passenger_number)
