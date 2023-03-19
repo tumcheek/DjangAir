@@ -1,0 +1,18 @@
+{% autoescape off %}
+Dear [Passenger Name],
+
+Thank you for choosing our Air system for your upcoming trip. Please find below the details of your flight itinerary:
+
+Flight details:
+Departure Date: {{ start_date }}
+Departure Time: {{ start_time }}
+From: {{ start_location }}
+To: {{ end_location }}
+Flight Number: {{ flight_number }}
+
+Passenger details:
+First name: {{ first_name }}
+Last name: {{ last_name }}
+Seat Number: {{ seat_number }}
+Ticket Number: {{ ticket_number }}
+{% endautoescape %}
