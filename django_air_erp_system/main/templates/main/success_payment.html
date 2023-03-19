@@ -1,0 +1,10 @@
+{% extends '../base.html' %}
+{% block title%}Success payment{% endblock %}
+{% block content %}
+<p>Congratulations! Your payment has been successfully processed.
+    Thank you for your purchase! Your transaction has been completed, and a receipt
+    for your purchase has been emailed to you.
+    You can also view the details of your purchase on your account page.</p>
+
+<a href="{% url 'main:index' %}">Back to booking tickets</a>
+{% endblock %}
