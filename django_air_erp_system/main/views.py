@@ -272,3 +272,39 @@ class BookView(View):
         total = int(total*100)
 
         return redirect('main:payment', total=total, name=slug_info, amount=passenger_number)
+
+
+class PaymentView(View):
+    try:
+        stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY')
+        domain_url = getattr(settings, 'DOMAIN_URL')
+    except AttributeError:
+        raise AttributeError(
+            'You must add STRIPE_SECRET_KEY and DOMAIN_URL attributes to your settings'
+        )
+
+    def get(self, request, name, total, amount):
+        session = stripe.checkout.Session.create(
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': name,
+                    },
+                    'unit_amount': total,
+                },
+                'quantity': amount,
+            }],
+            mode='payment',
+            success_url=self.domain_url + reverse('main:success_payment'),
+            cancel_url=self.domain_url + reverse('main:cancel_payment'),
+        )
+        return redirect(session.url, code=303)
+
+
+class SuccessPayment(TemplateView):
+    template_name = 'main/success_payment.html'
+
+
+class CancelPayment(TemplateView):
+    template_name = 'main/cancel_payment.html'
