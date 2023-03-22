@@ -69,6 +69,9 @@ class FlightModel(models.Model):
             self.slug = slugify([self.start_location, self.end_location])
         super(FlightModel, self).save(*args, **kwargs)
 
+    class Meta:
+        ordering = ['start_location', 'start_time']
+
     def __str__(self):
         return f'From {self.start_location} to {self.end_location}'
 
@@ -105,6 +108,9 @@ class TicketModel(models.Model):
                 [self.flight.start_location, self.flight.end_location, self.seat.pk, self.passenger.pk]
             )
         super(TicketModel, self).save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-flight']
 
     def __str__(self):
         return str(self.flight)
