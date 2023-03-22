@@ -1,4 +1,5 @@
 import stripe
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -124,6 +125,63 @@ def get_options_price(options):
         for option in options:
             _sum += option.price.price
     return _sum
+
+
+def get_ticket_options(options):
+    _options = []
+
+    for option in options:
+        option_info = {
+            'name': option.name,
+            'description': option.description,
+            'price': option.price.price
+        }
+        _options.append(option_info)
+    return _options
+
+
+def get_user_tickets(tickets):
+    _tickets = []
+    for ticket in tickets:
+        options = get_ticket_options(ticket.options.all())
+        ticket_info = {
+            'from': ticket.flight.start_location,
+            'to': ticket.flight.end_location,
+            'start_date': ticket.flight.start_date,
+            'end_date': ticket.flight.end_date,
+            'start_time': ticket.flight.start_time,
+            'end_time': ticket.flight.end_time,
+            'seat': ticket.seat.seat_number,
+            'seat_type': ticket.seat.seat_type.get_seat_type_display(),
+            'options': options
+        }
+        _tickets.append(ticket_info)
+    return _tickets
+
+
+def check_is_user_future_flights(ticket):
+    flight_date = ticket['start_date'].date()
+    flight_time = ticket['start_time']
+    now = timezone.now()
+    if flight_date > now.date():
+        return True
+    elif flight_date == now.date():
+        return flight_time > now.time()
+    return False
+
+
+@login_required
+def get_user_flights(request, user_flights):
+    template_name = 'main/passenger_cabinet.html'
+    user = request.user
+    tickets = get_user_tickets(user.ticketmodel_set.all())
+    context = {
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email,
+        'tickets': filter(check_is_user_future_flights, tickets) if user_flights == 'future_flights' else tickets
+    }
+    return render(request, template_name, context)
 
 
 @require_http_methods(["GET"])
@@ -316,3 +374,16 @@ class LoginView(Login):
     template_name = 'main/login.html'
     redirect_authenticated_user = True
     authentication_form = UserLoginForm
+
+
+class PassengerCabinetView(View):
+    template_name = 'main/passenger_cabinet.html'
+
+    def get(self, request):
+        user = request.user
+        context = {
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+        }
+        return render(request, self.template_name, context)
