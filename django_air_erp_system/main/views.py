@@ -8,8 +8,10 @@ from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 from django.views.generic import TemplateView
+from django.contrib.auth.views import LoginView as Login
+from django.utils import timezone
 
-from .forms import SearchFlightForm
+from .forms import SearchFlightForm, UserLoginForm
 from . import models
 from .form_validator import is_form_data_valid
 from .tasks import send_mail_task
@@ -308,3 +310,9 @@ class SuccessPayment(TemplateView):
 
 class CancelPayment(TemplateView):
     template_name = 'main/cancel_payment.html'
+
+
+class LoginView(Login):
+    template_name = 'main/login.html'
+    redirect_authenticated_user = True
+    authentication_form = UserLoginForm
