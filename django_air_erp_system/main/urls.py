@@ -44,4 +44,15 @@ urlpatterns = [
         path('login/', views.LoginView.as_view(), name='login'),
         path('logout/', LogoutView.as_view(), name='logout'),
     ])),
+    path('cabinet/', include([
+        path('',
+             login_required(views.PassengerCabinetView.as_view()),
+             name='cabinet'),
+        path(
+            'flights/<str:user_flights>/',
+            views.get_user_flights,
+            name='user_flights'
+        )
+    ]))
+
 ]
