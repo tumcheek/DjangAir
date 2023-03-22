@@ -1,0 +1,26 @@
+{% extends '../base.html' %}
+{% block title%}Profile{% endblock %}
+{% block content %}
+<p> {{first_name}} {{ last_name }} </p>
+<p>{{ email }}</p>
+<a href="{% url 'main:user_flights' 'all_flights' %}">See all your flights</a>
+<a href="{% url 'main:user_flights' 'future_flights' %}">See your future flights</a>
+<div class="ticket">
+    {% for ticket in tickets %}
+    <p class="ticket_destination">{{ ticket.from }} - {{ ticket.to }}</p>
+    <p class="ticket_date">{{ ticket.start_time }} {{ ticket.start_date }} - {{ ticket.end_time }} {{ ticket.end_date }}</p>
+    <p class="ticket_seat">Seat - {{ ticket.seat }}</p>
+    <p class="ticket_seat_type">Seat Type - {{ ticket.seat_type }}</p>
+    {% for option in ticket.options %}
+    <div class="ticket_options">
+        <div class="option">
+            <p class="option_name">{{ option.name }}</p>
+            <p class="option_description">{{ option.description }}</p>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% endfor %}
+</div>
+<a href="{% url 'main:logout' %}">Logout</a>
+{% endblock %}
