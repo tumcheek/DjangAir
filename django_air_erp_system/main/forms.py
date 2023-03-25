@@ -1,5 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from .models import PassengerModel
 
 
 class SearchFlightForm(forms.Form):
@@ -23,3 +24,15 @@ class UserLoginForm(AuthenticationForm):
         }
         )
     )
+
+
+class RegistrationForm(UserCreationForm):
+    email = forms.EmailField(
+        label="Email",
+        max_length=254,
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'})
+    )
+
+    class Meta:
+        model = PassengerModel
+        fields = ('email', 'first_name', 'last_name')
