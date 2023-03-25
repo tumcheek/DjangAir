@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -157,3 +160,16 @@ DOMAIN_URL = str(getenv('DOMAIN_URL'))
 LOGIN_REDIRECT_URL = '/cabinet/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/auth/login'
+
+# Database social settings
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# GOOGLE social settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY'))
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET'))
