@@ -12,7 +12,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.views import LoginView as Login
 from django.utils import timezone
 
-from .forms import SearchFlightForm, UserLoginForm
+from .forms import SearchFlightForm, UserLoginForm, RegistrationForm
 from . import models
 from .form_validator import is_form_data_valid
 from .tasks import send_mail_task
@@ -385,5 +385,35 @@ class PassengerCabinetView(View):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email,
+        }
+        return render(request, self.template_name, context)
+
+
+class RegistrationView(View):
+    template_name = 'main/registration.html'
+
+    def get(self, request):
+        form = RegistrationForm()
+        context = {
+            'form': form
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            email = form.cleaned_data['email']
+            message = render_to_string(
+                'main/email_messages/user_registration_message.html',
+            )
+            registration_mail_subject = get_mail_subject('registration', 'Registration')
+            send_mail_task.delay(message, email, registration_mail_subject)
+
+            return redirect('main:cabinet')
+
+        context = {
+            'form': form
         }
         return render(request, self.template_name, context)
