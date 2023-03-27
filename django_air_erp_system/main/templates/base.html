@@ -5,6 +5,14 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
+<header>
+    <a href="{% url 'main:index' %}">DjangoAir</a>
+    {% if is_user_login %}
+    <p><a href="{% url 'main:cabinet' %}">My cabinet</a> <a href="{% url 'main:logout' %}">Logout</a></p>
+    {% else %}
+    <p><a href="{% url 'main:login' %}">Login</a> or <a href="{% url 'main:registration' %}">Sign up</a></p>
+    {% endif %}
+</header>
 {% block content%}
 {% endblock %}
 </body>
