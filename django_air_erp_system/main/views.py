@@ -197,7 +197,8 @@ def get_flights(request, start_location, end_location, start_date, passenger_num
     context = {
         'flights': flights,
         'is_flights': is_flights,
-        'passenger_number': passenger_number
+        'passenger_number': passenger_number,
+        'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, 'main/search_result.html', context)
 
@@ -208,7 +209,8 @@ class IndexView(View):
     def get(self, request):
         form = SearchFlightForm()
         context = {
-            'form': form
+            'form': form,
+            'is_user_login': True if request.user.is_authenticated else False
         }
         return render(request, self.template_name, context)
 
@@ -242,7 +244,8 @@ class BookView(View):
             'flight': flight_info,
             'passenger_range': range(passenger_number),
             'seats': seats,
-            'options': options
+            'options': options,
+            'is_user_login': True if request.user.is_authenticated else False
         }
         return render(request, self.template_name, context)
 
@@ -258,7 +261,8 @@ class BookView(View):
                 'slug_info': slug_info,
                 'start_date': start_date,
                 'passenger_number': passenger_number,
-                'error': e.message
+                'error': e.message,
+                'is_user_login': True if request.user.is_authenticated else False
             }
             return redirect(reverse('main:book_ticket_error', kwargs=context))
 
@@ -385,6 +389,7 @@ class PassengerCabinetView(View):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email,
+            'is_user_login': True if request.user.is_authenticated else False
         }
         return render(request, self.template_name, context)
 
