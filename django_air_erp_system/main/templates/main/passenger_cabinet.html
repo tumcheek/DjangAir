@@ -3,24 +3,29 @@
 {% block content %}
 <p> {{first_name}} {{ last_name }} </p>
 <p>{{ email }}</p>
-<a href="{% url 'main:user_flights' 'all_flights' %}">See all your flights</a>
-<a href="{% url 'main:user_flights' 'future_flights' %}">See your future flights</a>
-<div class="ticket">
+<a class="btn btn-info" href="{% url 'main:user_flights' 'all_flights' %}">See all your flights</a>
+<a class="btn btn-info" href="{% url 'main:user_flights' 'future_flights' %}">See your future flights</a>
+<div class="flights pt-3">
     {% for ticket in tickets %}
-    <p class="ticket_destination">{{ ticket.from }} - {{ ticket.to }}</p>
-    <p class="ticket_date">{{ ticket.start_time }} {{ ticket.start_date }} - {{ ticket.end_time }} {{ ticket.end_date }}</p>
-    <p class="ticket_seat">Seat - {{ ticket.seat }}</p>
-    <p class="ticket_seat_type">Seat Type - {{ ticket.seat_type }}</p>
-    {% for option in ticket.options %}
-    <div class="ticket_options">
-        <div class="option">
-            <p class="option_name">{{ option.name }}</p>
-            <p class="option_description">{{ option.description }}</p>
+    <div class="row flight border border-info w-50 p-3 mb-3">
+        <h3 class="col-12 text-center ticket_destination">{{ ticket.from }} - {{ ticket.to }}</h3>
+        <h4 class="col-12 text-center ticket_date">{{ ticket.start_time }} {{ ticket.start_date }} - {{ ticket.end_time }} {{ ticket.end_date }}</h4>
+        <p class="ticket_seat">Seat - {{ ticket.seat }}</p>
+        <p class="ticket_seat_type">Seat Type - {{ ticket.seat_type }}</p>
+        {% if ticket.options %}
+        <h4 class="col-12 text-center">Options</h4>
+        {% for option in ticket.options %}
+        <div class="ticket_options">
+            <div class="option">
+                <p class="option_name">{{ option.name }}</p>
+                <p class="option_description">{{ option.description }}</p>
+            </div>
         </div>
     </div>
-    {% endfor %}
 
     {% endfor %}
+{% endif %}
+    {% endfor %}
 </div>
-<a href="{% url 'main:logout' %}">Logout</a>
+<a class="btn btn-danger mt-3" href="{% url 'main:logout' %}">Logout</a>
 {% endblock %}

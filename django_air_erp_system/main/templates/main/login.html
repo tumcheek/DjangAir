@@ -1,10 +1,14 @@
 {% extends '../base.html' %}
 {% block title%}Login{% endblock %}
 {% block content %}
-<form method="post">
+<form class="d-flex form-row flex-column align-items-center" method="post">
     {% csrf_token %}
-    {{ form }}
-    <button type="submit">Login</button>
-    <a href="{% url 'social:begin' 'google-oauth2' %}">Login with Google</a>
+    {{ form.username }}
+    {{ form.password }}
+    <button class='col-xl-3 col-lg-8 col-sm-12 btn btn-lg btn-primary btn-block mb-3' type="submit">Login</button>
+    <p class="col-xl-3 col-lg-8 col-sm-12">You can also login with <a class="btn btn-lg btn-success" href="{% url 'social:begin' 'google-oauth2' %}">Google</a></p>
+
+
+
 </form>
 {% endblock %}

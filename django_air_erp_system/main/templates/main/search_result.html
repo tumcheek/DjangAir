@@ -2,28 +2,30 @@
 {% block title%}Flights{% endblock %}
 {% block content %}
 {% if is_flights %}
-<h1>Select flight</h1>
+<div class="d-flex row flex-column align-items-center">
+    <h2 class="col-12 text-center">Select flight</h2>
 {% for flight in flights %}
-<div class="flight-info">
-    <p class="flight-destination">{{ flight.start_location }} - {{ flight.end_location }}</p>
-    <p class="flight-available-seats">Available seats {{ flight.available_seats }}</p>
-    <p class="flight-date">{{ flight.start_date }} {{ flight.start_time }} - {{ flight.end_date }} {{ flight.end_time }}</p>
-    <p class="flight-price">Price - {{ flight.price }}</p>
-    <div class="options">
-        <h3>Options</h3>
+<div class="row col-mb-12 col-lg-8 border border-primary mb-3 flight-info">
+    <h3 class="col-12 text-center flight-destination">{{ flight.start_location }} - {{ flight.end_location }}</h3>
+    <h4 class="col-12 text-center flight-date">{{ flight.start_date }} {{ flight.start_time }} - {{ flight.end_date }} {{ flight.end_time }}</h4>
+    <p class="col-12 flight-available-seats">Available seats - {{ flight.available_seats }}</p>
+    <p class="col-12 flight-price">Price - {{ flight.price }}</p>
+    <div class="row justify-content-center mb-3 options">
+        <h4 class="col-12 text-center">Flight options</h4>
             {% for option in flight.options %}
-        <div class="option-info">
-            <p class="option-name">{{ option.name }}</p>
+        <div class="col-4 text-center border border-success mx-auto option-info">
+            <h5 class="option-name">{{ option.name }}</h5>
             <p class="option-description">{{ option.description }}</p>
-            <p class="option-price">{{ option.price }}</p>
+            <p class="option-price">Price: {{ option.price }}</p>
         </div>
     {% endfor %}
     </div>
 
-    <a href="{% url 'main:book_ticket' flight.slug  flight.start_date passenger_number %}">Select flight</a>
+    <a class="btn btn-info mb-3" href="{% url 'main:book_ticket' flight.slug  flight.start_date passenger_number %}">Select flight</a>
 </div>
 {% endfor %}
 {% else %}
 <h2>Sorry, we do not have flights</h2>
 {% endif %}
 {% endblock %}
+</div>

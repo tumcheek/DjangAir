@@ -1,9 +1,17 @@
 {% extends '../base.html' %}
 {% block title%}Air{% endblock %}
 {% block content %}
-<form action="{% url 'main:index' %}" method="post">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Search">
+
+<form class="form-inline" action="{% url 'main:index' %}" method="post">
+    <div class="row input-group">
+        {% csrf_token %}
+        {{ form.start_location }}
+        {{ form.end_location }}
+        {{ form.start_date }}
+        {{ form.passenger_number }}
+        <button type="submit" class="col-lg-1 col-md-12 btn btn-primary">Search</button>
+    </div>
+
 </form>
+
 {% endblock %}
