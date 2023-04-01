@@ -1,3 +1,4 @@
+from datetime import datetime
 import stripe
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -147,8 +148,8 @@ def get_user_tickets(tickets):
         ticket_info = {
             'from': ticket.flight.start_location,
             'to': ticket.flight.end_location,
-            'start_date': ticket.flight.start_date,
-            'end_date': ticket.flight.end_date,
+            'start_date': ticket.flight.start_date.strftime('%Y-%m-%d'),
+            'end_date': ticket.flight.end_date.strftime('%Y-%m-%d'),
             'start_time': ticket.flight.start_time,
             'end_time': ticket.flight.end_time,
             'seat': ticket.seat.seat_number,
@@ -160,7 +161,7 @@ def get_user_tickets(tickets):
 
 
 def check_is_user_future_flights(ticket):
-    flight_date = ticket['start_date'].date()
+    flight_date = datetime.strptime(ticket['start_date'], '%Y-%m-%d').date()
     flight_time = ticket['start_time']
     now = timezone.now()
     if flight_date > now.date():
@@ -179,7 +180,8 @@ def get_user_flights(request, user_flights):
         'first_name': user.first_name,
         'last_name': user.last_name,
         'email': user.email,
-        'tickets': filter(check_is_user_future_flights, tickets) if user_flights == 'future_flights' else tickets
+        'tickets': filter(check_is_user_future_flights, tickets) if user_flights == 'future_flights' else tickets,
+        'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, template_name, context)
 
@@ -245,7 +247,10 @@ class BookView(View):
             'passenger_range': range(passenger_number),
             'seats': seats,
             'options': options,
-            'is_user_login': True if request.user.is_authenticated else False
+            'is_user_login': True if request.user.is_authenticated else False,
+            'slug_info': slug_info,
+            'start_date': start_date,
+            'passenger_number': passenger_number
         }
         return render(request, self.template_name, context)
 
