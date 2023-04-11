@@ -2,16 +2,103 @@
 {% block title%}Air{% endblock %}
 {% block content %}
 
-<form class="form-inline" action="{% url 'main:index' %}" method="post">
-    <div class="row input-group">
+  <form id="app" class="form-inline" action="{% url 'main:index' %}" method="post">
+    <div class="row g-0 input-group">
         {% csrf_token %}
+        <div class="col-lg-3 position-relative col-md-12" >
         {{ form.start_location }}
-        {{ form.end_location }}
+        <ul v-if="showFromClues" style="z-index:2;" class="list-group position-absolute col-12">
+            <li v-for="(clue, index) in filteredFromCities" :key="index" @click="fillFromInput(clue)"
+                v-text="clue" role="button" class="list-group-item p-3"></li>
+        </ul>
+        </div>
+        <div class="col-lg-3 position-relative col-md-12" >
+            {{ form.end_location }}
+        <ul v-if="showToClues" style="z-index:2;" class="list-group position-absolute col-12">
+            <li v-for="(clue, index) in filteredToCities" :key="index" @click="fillToInput(clue)"
+                v-text="clue" role="button" class="list-group-item p-3"></li>
+        </ul>
+        </div>
+        <div class="col-lg-3 position-relative col-md-12" >
         {{ form.start_date }}
+        </div>
+        <div class="col-lg-2 position-relative col-md-12" >
         {{ form.passenger_number }}
+        </div>
         <button type="submit" class="col-lg-1 col-md-12 btn btn-primary">Search</button>
     </div>
-
 </form>
+
+<script src="https://unpkg.com/vue@next"></script>
+<script>
+    Vue.createApp({
+  data() {
+    return {
+      fromInput: '',
+      toInput: '',
+      fromCities: [],
+      toCities: [],
+      showFromClues: false,
+      showToClues: false
+    }
+  },
+  computed: {
+    filteredFromCities() {
+      return this.fromCities.filter(city => city.startsWith(this.fromInput))
+    },
+    filteredToCities() {
+      return this.toCities.filter(city => city.startsWith(this.toInput))
+    }
+  },
+  methods: {
+    async getFromCities() {
+      try {
+        const response = await fetch(`location/?from=${this.fromInput}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch cities')
+        }
+        const cities = await response.json()
+        this.fromCities = cities
+        this.showFromClues = true
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    async getToCities() {
+      try {
+        const response = await fetch(`location/?from=${this.fromInput}&to=${this.toInput}&is_end=True`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch cities')
+        }
+        const cities = await response.json()
+        this.toCities = cities
+        this.showToClues = true
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    fillFromInput(clue) {
+      this.fromInput = clue
+      this.showFromClues = false
+    },
+    fillToInput(clue) {
+      this.toInput = clue
+      this.showToClues = false
+    },
+    changeFromBlur()
+      {
+      setTimeout(() => {
+      this.showFromClues = false
+    }, 200);
+      },
+    changeToBlur()
+      {
+      setTimeout(() => {
+      this.showToClues = false
+    }, 200);
+      },
+  }
+}).mount('#app');
+</script>
 
 {% endblock %}

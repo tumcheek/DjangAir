@@ -5,49 +5,84 @@
 <div class="row">
     <h2 class="col-12 text-center mb-3">{{ flight.start_location }} - {{ flight.end_location }}</h2>
 
-    <form class="row col-12" action="{% url 'main:book_ticket' slug_info start_date passenger_number %}" method="post" enctype="multipart/form-data">
+    <form id="form-app" class="row col-12" action="{% url 'main:book_ticket' slug_info start_date passenger_number %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% if error %}
             <h3 class="error">{{ error }}</h3>
         {% endif %}
         {% for i in passenger_range %}
-        <div class="col-12 row ticket">
-            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 mx-lg-3 p-3" placeholder="First name" required name="First name[]" type="text">
-            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 mx-lg-3 p-3" placeholder="Last name" required name="Last name[]" type="text">
-            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 p-3" placeholder="Email" required name="email[]" type="email">
+        <div id="passenger-{{i}}" class="col-12 row ticket">
+            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 mx-lg-3 p-3" placeholder="First name" required name="First name[]"  type="text">
+            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 mx-lg-3 p-3" placeholder="Last name" required name="Last name[]"  type="text">
+            <input class="col-md-12 mb-md-2 mb-lg-0 col-lg-3 p-3" placeholder="Email" required name="email[]"  type="email">
             <div class="seats col-12">
                 {% for seats_type, seats_number in seats.items %}
                 <h3 class="my-3">{{ seats_type }}</h3>
                 {% for seat in seats_number %}
             <div class="form-check form-check-inline">
                     {% if seat.is_available %}
-                        <label class="form-check-label"><input class="form-check-input" required type="radio" name="seat_{{ i }}" value="{{ seat.number }}">{{ seat.number }}</label>
+                        <label class="form-check-label"><input class="form-check-input" required type="radio"  name="seat_{{ i }}" value="{{ seat.number }}">{{ seat.number }}</label>
                     {% else %}
-                        <label class="form-check-label"><input class="form-check-input" disabled type="radio" name="seat_{{ i }}" value="{{ seat.number }}">{{ seat.number }}</label>
+                        <label class="form-check-label"><input class="form-check-input" disabled type="radio"  name="seat_{{ i }}" value="{{ seat.number }}">{{ seat.number }}</label>
                     {% endif %}
             </div>
                 {% endfor %}
             {% endfor %}
             </div>
 
-            <div class="options col-12 row mb-5 mt-3">
+            <div class="options col-12 row mb-4 mt-3">
                 {% for option in options %}
                 <div class="option text-center mx-3 col-md-5 col-lg-3 mb-2 border border-primary">
                     <h3 class="option-name">{{ option.name }}</h3>
                     <p class="option-description">{{ option.description }}</p>
                     <p class="option-price">{{ option.price }}</p>
-                    <input type="checkbox" name="options_{{ i }}" value="{{ option.id }}">
+                    <input type="checkbox" name="options_{{ i }}"  value="{{ option.id }}">
                 </div>
                 {% endfor %}
             </div>
 
         </div>
         {% endfor %}
+        <h3 class="fw-light text-center mb-3"> [[ formCount + 1 ]]/[[ allPassenger ]]</h3>
         <div class="button-container row d-flex justify-content-center">
-            <button class="btn btn-lg btn-danger col-2" type="submit">Submit</button>
+            <button v-if="formCount > 0" @click="previousPassenger" class="btn btn-lg btn-success col-sm-12 col-lg-3 mt-sm-3 mx-sm-0 mx-lg-3 mt-lg-0" type="button">Previous</button>
+            <button v-if="allPassenger > formCount + 1" @click="nextPassenger" class="btn btn-lg btn-success mt-sm-3 col-sm-12 col-lg-3 mt-lg-0" type="button">Next</button>
+            <button class="btn btn-lg btn-danger mt-sm-3 mt-lg-0 col-sm-12 mx-sm-0 mx-lg-3 col-lg-3" type="submit">Submit</button>
         </div>
-
     </form>
-</div>
 
+</div>
+<script src="https://unpkg.com/vue@next"></script>
+
+<script>
+    Vue.createApp({
+    delimiters: ["[[", "]]"],
+    data(){
+        return {
+            formCount:0,
+            allPassenger: 0,
+        }
+    },
+    methods:{
+        nextPassenger() {
+            document.getElementById(`passenger-${this.formCount}`).classList.add('d-none');  
+            this.formCount++;
+            document.getElementById(`passenger-${this.formCount}`).classList.remove('d-none');     
+        },
+        previousPassenger() {
+            document.getElementById(`passenger-${this.formCount}`).classList.add('d-none'); 
+            this.formCount--;
+            document.getElementById(`passenger-${this.formCount}`).classList.remove('d-none');  
+          }
+    },
+    mounted: function () {
+        this.allPassenger = '{{ passenger_number }}';
+        if (this.allPassenger > 1){
+            for(i=1; i < this.allPassenger; i++){
+                document.getElementById(`passenger-${i}`).classList.add('d-none');  
+            }
+        }
+    }
+    }).mount('#form-app')
+</script>
 {% endblock %}
