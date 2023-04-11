@@ -1,6 +1,7 @@
 from datetime import datetime
 import stripe
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -169,6 +170,22 @@ def check_is_user_future_flights(ticket):
     elif flight_date == now.date():
         return flight_time > now.time()
     return False
+
+
+@require_http_methods(["GET"])
+def get_location_name(request):
+    end_location_query = request.GET.get('to', '')
+    start_location_query = request.GET.get('from', '')
+    is_end = request.GET.get('is_end', '')
+    if is_end:
+        end_location = models.FlightModel.objects.filter(
+            start_location=start_location_query
+        ).filter(end_location__istartswith=end_location_query)
+        word_list = [word.end_location for word in end_location]
+        return JsonResponse(word_list, safe=False)
+    start_location = models.FlightModel.objects.filter(start_location__istartswith=start_location_query)[:3]
+    word_list = [word.start_location for word in start_location]
+    return JsonResponse(word_list, safe=False)
 
 
 @login_required
