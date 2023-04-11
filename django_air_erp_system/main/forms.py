@@ -4,14 +4,36 @@ from .models import PassengerModel
 
 
 class SearchFlightForm(forms.Form):
-    start_location = forms.CharField(max_length=255, widget=forms.TextInput(
-        attrs={'class': 'col-sm-12 col-lg-3 p-3', 'placeholder': 'From'}))
-    end_location = forms.CharField(max_length=255, widget=forms.TextInput(
-        attrs={'class': 'col-sm-12 col-lg-3 col-sm-12 p-3', 'placeholder': 'To'}))
+    start_location = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'col-12 p-3',
+                'v-model': 'fromInput',
+                '@keyup': 'getFromCities',
+                '@focus': 'showFromClues = true',
+                '@blur': 'changeFromBlur',
+                'placeholder': 'From'
+            }
+        )
+    )
+    end_location = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'col-12 p-3',
+                'placeholder': 'To',
+                'v-model': 'toInput',
+                '@keyup': 'getToCities',
+                '@focus': 'showToClues = true',
+                '@blur': 'changeToBlur',
+            }
+        )
+    )
     start_date = forms.DateField(
         widget=forms.TextInput(
             attrs={
-                'class': 'col-sm-12 col-lg-3 p-3',
+                'class': 'col-12 p-3',
                 'placeholder': 'Departure',
                 'type': 'text',
                 'onfocus': '(this.type="date")',
@@ -19,8 +41,14 @@ class SearchFlightForm(forms.Form):
             }
         )
     )
-    passenger_number = forms.IntegerField(widget=forms.TextInput(
-        attrs={'class': 'col-sm-12 col-lg-2 p-3', 'placeholder': 'Passenger number'}))
+    passenger_number = forms.IntegerField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'col-12 p-3',
+                'placeholder': 'Passenger number'
+            }
+        )
+    )
 
 
 class UserLoginForm(AuthenticationForm):
