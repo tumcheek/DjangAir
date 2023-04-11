@@ -7,6 +7,7 @@ app_name = 'main'
 
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
+    path('location/', views.get_location_name, name='location'),
     path(
         'search/result/<str:start_location>/<str:end_location>/<str:start_date>/<int:passenger_number>/',
         views.get_flights,
