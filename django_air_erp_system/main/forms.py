@@ -1,54 +1,15 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.validators import MinValueValidator
+
 from .models import PassengerModel
 
 
 class SearchFlightForm(forms.Form):
-    start_location = forms.CharField(
-        max_length=255,
-        widget=forms.TextInput(
-            attrs={
-                'class': 'col-12 p-3',
-                'v-model': 'fromInput',
-                '@keyup': 'getFromCities',
-                '@focus': 'showFromClues = true',
-                '@blur': 'changeFromBlur',
-                'placeholder': 'From'
-            }
-        )
-    )
-    end_location = forms.CharField(
-        max_length=255,
-        widget=forms.TextInput(
-            attrs={
-                'class': 'col-12 p-3',
-                'placeholder': 'To',
-                'v-model': 'toInput',
-                '@keyup': 'getToCities',
-                '@focus': 'showToClues = true',
-                '@blur': 'changeToBlur',
-            }
-        )
-    )
-    start_date = forms.DateField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'col-12 p-3',
-                'placeholder': 'Departure',
-                'type': 'text',
-                'onfocus': '(this.type="date")',
-                'onblur': '(this.type="text")',
-            }
-        )
-    )
-    passenger_number = forms.IntegerField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'col-12 p-3',
-                'placeholder': 'Passenger number'
-            }
-        )
-    )
+    start_location = forms.CharField(max_length=255)
+    end_location = forms.CharField(max_length=255)
+    start_date = forms.DateField()
+    passenger_number = forms.IntegerField(validators=[MinValueValidator(1)])
 
 
 class UserLoginForm(AuthenticationForm):
