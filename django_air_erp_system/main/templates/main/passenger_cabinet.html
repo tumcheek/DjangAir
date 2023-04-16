@@ -21,10 +21,9 @@
                 <p class="option_description">{{ option.description }}</p>
             </div>
         </div>
+        {% endfor %}
+        {% endif %}
     </div>
-
-    {% endfor %}
-{% endif %}
     {% endfor %}
 </div>
 <a class="btn btn-danger mt-3" href="{% url 'main:logout' %}">Logout</a>
