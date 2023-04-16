@@ -6,6 +6,7 @@ from .import views
 app_name = 'main'
 
 urlpatterns = [
+    path('flight/<slug:slug_info>/<str:start_date>/', views.book_view_api, name='book_api'),
     path('', views.IndexView.as_view(), name='index'),
     path('location/', views.get_location_name, name='location'),
     path(
@@ -19,11 +20,6 @@ urlpatterns = [
         name='book_ticket'
     ),
 
-    path(
-        'booking/<slug:slug_info>/<str:start_date>/<int:passenger_number>/<str:error>',
-        views.BookView.as_view(),
-        name='book_ticket_error'
-    ),
     path('payment/',
          include([
              path('success/',
