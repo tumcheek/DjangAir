@@ -6,10 +6,19 @@ from .models import PassengerModel
 
 
 class SearchFlightForm(forms.Form):
-    start_location = forms.CharField(max_length=255)
-    end_location = forms.CharField(max_length=255)
-    start_date = forms.DateField()
-    passenger_number = forms.IntegerField(validators=[MinValueValidator(1)])
+    start_location = forms.CharField(
+        max_length=255,
+        error_messages={'required': 'The Form field is required.'}
+    )
+    end_location = forms.CharField(
+        max_length=255,
+        error_messages={'required': 'The To field is required.'}
+    )
+    start_date = forms.DateField(error_messages={'required': 'The Start Date field is required.'})
+    passenger_number = forms.IntegerField(
+        validators=[MinValueValidator(1)],
+        error_messages={'required': 'The Number of Passengers field is required.'}
+    )
 
 
 class UserLoginForm(AuthenticationForm):
