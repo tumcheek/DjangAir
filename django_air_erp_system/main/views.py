@@ -222,6 +222,17 @@ def get_flights(request, start_location, end_location, start_date, passenger_num
     return render(request, 'main/search_result.html', context)
 
 
+def book_view_api(request, slug_info, start_date):
+    flight = models.FlightModel.objects.filter(slug=slug_info, start_date=start_date)[0]
+    seats = get_all_seats(flight)
+    flight_info = get_flight_info(flight)
+    context = {
+        'flight': flight_info,
+        'seats': seats,
+    }
+    return JsonResponse(context)
+
+
 class IndexView(View):
     template_name = 'main/index.html'
 
@@ -253,17 +264,11 @@ class IndexView(View):
 class BookView(View):
     template_name = 'main/book_ticket.html'
 
-    def get(self, request, slug_info, start_date, passenger_number, error=None):
+    def get(self, request, slug_info, start_date, passenger_number):
         flight = models.FlightModel.objects.get(slug=slug_info)
-        seats = get_all_seats(flight)
         flight_info = get_flight_info(flight)
-        options = get_flight_options(flight)
         context = {
-            'error': error,
             'flight': flight_info,
-            'passenger_range': range(passenger_number),
-            'seats': seats,
-            'options': options,
             'is_user_login': True if request.user.is_authenticated else False,
             'slug_info': slug_info,
             'start_date': start_date,
@@ -271,8 +276,9 @@ class BookView(View):
         }
         return render(request, self.template_name, context)
 
-    def post(self, request, slug_info, start_date, passenger_number, error=None):
+    def post(self, request, slug_info, start_date, passenger_number):
         flight = models.FlightModel.objects.get(slug=slug_info)
+        flight_info = get_flight_info(flight)
         required_fields = ['First name[]', 'Last name[]', 'email[]']
         try:
             check_post_fields(request, required_fields, passenger_number)
@@ -280,13 +286,14 @@ class BookView(View):
             is_form_data_valid(form, passenger_number, flight)
         except ValidationError as e:
             context = {
+                'flight': flight_info,
                 'slug_info': slug_info,
                 'start_date': start_date,
                 'passenger_number': passenger_number,
                 'error': e.message,
                 'is_user_login': True if request.user.is_authenticated else False
             }
-            return redirect(reverse('main:book_ticket_error', kwargs=context))
+            return render(request, self.template_name, context)
 
         total = 0
         for i in range(passenger_number):
