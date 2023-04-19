@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Union, List, Dict, Any, Tuple
+import string
 from django.db.models import QuerySet
 import stripe
 from django.contrib.auth.decorators import login_required
@@ -20,6 +21,8 @@ from .forms import SearchFlightForm, UserLoginForm, RegistrationForm
 from . import models
 from .form_validator import is_form_data_valid
 from .tasks import send_mail_task
+
+ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation
 
 
 def get_flight_options(flight: models.FlightModel) -> List[Dict[str, Any]]:
@@ -217,17 +220,17 @@ def is_user_exist(email: str) -> bool:
         return False
 
 
-def generate_password(length: int = 12) -> str:
+def generate_password(length: int = 12, allowed_chars: str = ALLOWED_CHARS) -> str:
     """
     Generates a random password of the specified length.
 
     Args:
         length: An integer representing the length of the password to generate. Default is 12.
-
+        allowed_chars: : A string containing the characters that can be used in the generated password. Default value
+        is a string of all alphanumeric characters and several special characters.
     Returns:
         A string representing the generated password.
     """
-    allowed_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-='
     return get_random_string(length=length, allowed_chars=allowed_chars)
 
 
