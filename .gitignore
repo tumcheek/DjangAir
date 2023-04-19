@@ -172,3 +172,10 @@ node_modules/
 
 # staticfiles
 staticfiles/
+
+# package-lock
+package-lock.json
+
+# bundle.js
+bundle.js
+bundle.js.LICENSE.txt
