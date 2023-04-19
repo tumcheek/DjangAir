@@ -1,8 +1,20 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
+from django.http import HttpRequest
+from .models import FlightModel
 
 
-def is_seat_available(seat, flight):
+def is_seat_available(seat: int, flight: FlightModel) -> bool:
+    """
+    Check if a seat is available on a given flight.
+
+    Args:
+        seat: The seat number to check.
+        flight: The flight instance to check the seat availability on.
+
+    Returns:
+        A boolean indicating whether the seat is available or not.
+    """
     tickets = flight.tickets.all()
     seats = [ticket.seat.seat_number for ticket in tickets]
     if seat in seats:
@@ -10,7 +22,21 @@ def is_seat_available(seat, flight):
     return True
 
 
-def is_form_data_valid(form, passenger_number, flight):
+def is_form_data_valid(form: HttpRequest, passenger_number: int, flight: FlightModel) -> bool:
+    """
+    Validates the form data submitted by the user to book flight tickets.
+
+    Args:
+        form: HttpRequest object representing the form data submitted by the user.
+        passenger_number: The number of passengers for which tickets are being booked.
+        flight: The flight instance for which tickets are being booked.
+
+    Returns:
+        bool: True if the form data is valid, False otherwise.
+
+    Raises:
+        ValidationError: If any of the input data is invalid.
+    """
 
     first_names = form.getlist('First name[]')
     last_names = form.getlist('Last name[]')
