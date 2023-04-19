@@ -355,6 +355,7 @@ def check_is_user_future_flights(ticket: Dict[str, Any]) -> bool:
     return False
 
 
+# views that return json
 @require_http_methods(["GET"])
 def get_location_name(request: HttpRequest) -> JsonResponse:
     """
@@ -380,6 +381,29 @@ def get_location_name(request: HttpRequest) -> JsonResponse:
     return JsonResponse(word_list, safe=False)
 
 
+def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> JsonResponse:
+    """
+    Retrieve information about a flight and available seats.
+
+    Args:
+        request: The HTTP request object.
+        slug_info: A string containing the slug for the flight.
+        start_date: A string containing the start date for the flight.
+
+    Returns:
+        A JsonResponse object containing a dictionary with the flight information and available seats.
+    """
+    flight = models.FlightModel.objects.filter(slug=slug_info, start_date=start_date)[0]
+    seats = get_all_seats(flight)
+    flight_info = get_flight_info(flight)
+    context = {
+        'flight': flight_info,
+        'seats': seats,
+    }
+    return JsonResponse(context)
+
+
+# views that return html page
 @login_required
 def get_user_flights(request: HttpRequest, user_flights: str) -> HttpResponse:
     """
@@ -442,28 +466,6 @@ def get_flights(
         'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, 'main/search_result.html', context)
-
-
-def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> JsonResponse:
-    """
-    Retrieve information about a flight and available seats.
-
-    Args:
-        request: The HTTP request object.
-        slug_info: A string containing the slug for the flight.
-        start_date: A string containing the start date for the flight.
-
-    Returns:
-        A JsonResponse object containing a dictionary with the flight information and available seats.
-    """
-    flight = models.FlightModel.objects.filter(slug=slug_info, start_date=start_date)[0]
-    seats = get_all_seats(flight)
-    flight_info = get_flight_info(flight)
-    context = {
-        'flight': flight_info,
-        'seats': seats,
-    }
-    return JsonResponse(context)
 
 
 class IndexView(View):
