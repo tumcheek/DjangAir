@@ -4,7 +4,7 @@ from django.urls import reverse
 from .. import models
 
 
-class BaseTest(TestCase):
+class TestViews(TestCase):
     def setUp(self):
         self.first_name = 'Test'
         self.last_name = 'Test'
@@ -116,12 +116,18 @@ class BaseTest(TestCase):
         }
         return super().setUp()
 
-
-class TestIndexView(BaseTest):
     def test_index_get(self):
         response = self.client.get(reverse(self.index_url))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, self.index_template)
+
+    def test_get_location_name_with_from_and_to(self):
+        response = self.client.get(reverse(self.location_url), data=self.location_data)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_location_name_with_from(self):
+        response = self.client.get(reverse(self.location_url), data={'from': 'test'})
+        self.assertEqual(response.status_code, 200)
 
     def test_index_post_valid_data(self):
         response = self.client.post(reverse(self.index_url), data=self.index_data)
@@ -132,25 +138,11 @@ class TestIndexView(BaseTest):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, self.index_template)
 
-
-class TestGetLocationView(BaseTest):
-    def test_get_location_name_with_from_and_to(self):
-        response = self.client.get(reverse(self.location_url), data=self.location_data)
-        self.assertEqual(response.status_code, 200)
-
-    def test_get_location_name_with_from(self):
-        response = self.client.get(reverse(self.location_url), data={'from': 'test'})
-        self.assertEqual(response.status_code, 200)
-
-
-class TestSearchResult(BaseTest):
     def test_search_result_get(self):
         response = self.client.get(reverse(self.search_result_url, kwargs=self.index_data))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, self.search_result_template)
 
-
-class TestBookView(BaseTest):
     def test_book_ticket_get(self):
         response = self.client.get(reverse(self.book_ticket_url, kwargs=self.book_ticket_data))
         self.assertEqual(response.status_code, 200)
@@ -166,37 +158,21 @@ class TestBookView(BaseTest):
                                     data=self.book_ticket_post_data)
         self.assertEqual(response.status_code, 302)
 
-
-class TestBookViewApi(BaseTest):
-    def test_book_view_api(self):
-        response = self.client.get(reverse(self.book_view_api_url, kwargs=self.book_view_api_data))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('flight', response.json())
-        self.assertIn('seats', response.json())
-
-
-class TestPaymentView(BaseTest):
     def test_payment_get(self):
         response = self.client.get(reverse(self.payment_url, kwargs=self.payment_data))
         self.assertEqual(response.status_code, 302)
 
-
-class TestPassengerCabinet(BaseTest):
     def test_passenger_cabinet_get(self):
         self.client.post(reverse(self.login_url), data=self.login_data, format='text/html')
         response = self.client.get(reverse(self.passenger_cabinet_url))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, self.passenger_cabinet_template)
 
-
-class TestGetUserFlights(BaseTest):
     def test_get_user_flights(self):
         self.client.post(reverse(self.login_url), data=self.login_data, format='text/html')
         response = self.client.get(reverse(self.user_flights_url, args=[self.user_flights]))
         self.assertEqual(response.status_code, 200)
 
-
-class TestRegistrationView(BaseTest):
     def test_registration_get(self):
         response = self.client.get(reverse(self.registration_url))
         self.assertEqual(response.status_code, 200)
@@ -210,3 +186,10 @@ class TestRegistrationView(BaseTest):
     def test_registration_valid_post(self):
         response = self.client.post(reverse(self.registration_url), data=self.registration_data)
         self.assertEqual(response.status_code, 302)
+
+    def test_book_view_api(self):
+        response = self.client.get(reverse(self.book_view_api_url, kwargs=self.book_view_api_data))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('flight', response.json())
+        self.assertIn('seats', response.json())
+
