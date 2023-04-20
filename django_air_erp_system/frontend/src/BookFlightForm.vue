@@ -27,7 +27,7 @@
                     <h3 class="option-name">{{ option.name }}</h3>
                     <p class="option-description">{{ option.description }}</p>
                     <p class="option-price">{{ option.price }}</p>
-                    <input type="checkbox" name="options_{{ i }}"  value="{{ option.id }}">
+                    <input type="checkbox" :name="'options_' + i"  :value="option.id">
                 </div>
 
         </div>
