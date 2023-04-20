@@ -234,6 +234,81 @@ def generate_password(length: int = 12, allowed_chars: str = ALLOWED_CHARS) -> s
     return get_random_string(length=length, allowed_chars=allowed_chars)
 
 
+def auto_user_registration(first_name: str, last_name: str, email: str) -> Dict[str, str]:
+    """
+    Automatically creates a new user with the given first name, last name, and email address and returns a dictionary
+    containing the user's email and randomly generated password.
+    Args:
+        first_name (str): The user's first name.
+        last_name (str): The user's last name.
+        email (str): The user's email address.
+
+    Returns:
+        dict: A dictionary containing the user's email and password.
+    """
+    user_password = generate_password()
+    models.PassengerModel.objects.create_user(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        password=user_password
+    )
+    user_info = {
+        'email': email,
+        'password': user_password
+
+    }
+    return user_info
+
+
+def create_passenger_ticket(
+        flight: models.FlightModel,
+        passenger: models.PassengerModel,
+        seat: models.SeatModel,
+        options: List[str]
+) -> Tuple[Dict[str, any], models.TicketModel]:
+    """
+    Creates a ticket for a given passenger and flight, along with any additional options selected.
+    Args:
+        flight: The flight object for which the ticket is being created.
+        passenger: The passenger object for whom the ticket is being created.
+        seat: The seat object selected for the ticket.
+        options: A list of additional options selected for the ticket.
+
+    Returns:
+        A tuple containing a dictionary of information about the created ticket and the ticket object.
+        The dictionary contains:
+            start_date: The start date of the flight.
+            start_time: The start time of the flight.
+            start_location: The starting location of the flight.
+            end_location: The ending location of the flight.
+            flight_number: The flight number.
+            first_name: The first name of the passenger.
+            last_name: The last name of the passenger.
+            seat_number: The seat number selected for the ticket.
+            ticket_number: The ticket number.
+        The ticket object is an instance of TicketModel.
+    """
+    ticket = models.TicketModel.objects.create(
+        flight=flight,
+        passenger=passenger,
+        seat=seat
+    )
+    ticket.options.add(*options)
+    ticket_info = {
+        'start_date': flight.start_date,
+        'start_time': flight.start_time,
+        'start_location': flight.start_location,
+        'end_location': flight.end_location,
+        'flight_number': flight.pk,
+        'first_name': ticket.passenger.first_name,
+        'last_name': ticket.passenger.last_name,
+        'seat_number': ticket.seat.seat_number,
+        'ticket_number': ticket.pk
+    }
+    return ticket_info, ticket
+
+
 def get_mail_subject(name: str, subject: str) -> str:
     """
     Returns the subject of an email by name. If the name is not found in the database,
@@ -573,7 +648,6 @@ class BookView(View):
                 'is_user_login': True if request.user.is_authenticated else False
             }
             return render(request, self.template_name, context)
-
         total = 0
         for i in range(passenger_number):
             first_name = form.getlist('First name[]')[i]
@@ -581,20 +655,8 @@ class BookView(View):
             email = form.getlist('email[]')[i]
             seat = form.get(f'seat_{i}')
             options = form.getlist(f'options_{i}')
-
             if not is_user_exist(email):
-                user_password = generate_password()
-                models.PassengerModel.objects.create_user(
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    password=user_password
-                )
-                context = {
-                    'email': email,
-                    'password': user_password
-
-                }
+                context = auto_user_registration(first_name, last_name, email)
                 message = render_to_string(
                     'main/email_messages/auto_registration_message.html',
                     context=context
@@ -602,24 +664,9 @@ class BookView(View):
                 registration_mail_subject = get_mail_subject('registration', 'Registration')
                 send_mail_task.delay(message, email, registration_mail_subject)
 
-            ticket = models.TicketModel.objects.create(
-                flight=flight,
-                passenger=models.PassengerModel.objects.get(email=email),
-                seat=flight.seats.get(seat_number=seat)
-            )
-            ticket.options.add(*options)
-            ticket_context = {
-                'start_date': flight.start_date,
-                'start_time': flight.start_time,
-                'start_location': flight.start_location,
-                'end_location': flight.end_location,
-                'flight_number': flight.pk,
-                'first_name': ticket.passenger.first_name,
-                'last_name': ticket.passenger.last_name,
-                'seat_number': ticket.seat.seat_number,
-                'ticket_number': ticket.pk
-            }
-
+            passenger = models.PassengerModel.objects.get(email=email)
+            ticket_seat = flight.seats.get(seat_number=seat)
+            ticket_context, ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
             ticket_message = render_to_string(
                 'main/email_messages/ticket_info.html',
                 context=ticket_context
@@ -639,11 +686,9 @@ class BookView(View):
                 bill_context
             )
             bill_mail_subject = get_mail_subject('bill', 'Bill')
-
             send_mail_task.delay(bill_message, email, bill_mail_subject)
         total = int(total*100)
-
-        return redirect('main:payment', total=total, name=slug_info, amount=passenger_number)
+        return redirect('main:payment', total=total, name=slug_info, amount=1)
 
 
 class PaymentView(View):
