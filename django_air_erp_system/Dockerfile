@@ -5,7 +5,7 @@ WORKDIR /app/frontend
 
 COPY frontend .
 
-RUN npm install && npm install @popperjs/core && mkdir ../main && mkdir ../main/static && npm run build
+RUN npm install && npm install @popperjs/core && mkdir ../static && npm run build
 
 
 # Stage 2
@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED 1
 
 COPY . /app
 
-COPY --from=frontend_builder /app/main/static/bundle.js /app/main/static/bundle.js
+COPY --from=frontend_builder /app/static/bundle.js /app/static/bundle.js
 
 RUN pip install --no-cache-dir -r requirements.txt && python manage.py collectstatic
 
