@@ -2,6 +2,7 @@ import random
 
 from .import factories
 from ... import models
+from authentication.models import PassengerModel
 
 
 def delete_all_data():
@@ -10,7 +11,7 @@ def delete_all_data():
     models.SeatModel.objects.all().delete()
     models.PriceModel.objects.all().delete()
     models.FlightModel.objects.all().delete()
-    models.PassengerModel.objects.all().delete()
+    PassengerModel.objects.all().delete()
     models.TicketModel.objects.all().delete()
     models.OptionModel.objects.all().delete()
     models.LuggageModel.objects.all().delete()
