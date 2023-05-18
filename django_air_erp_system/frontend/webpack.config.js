@@ -5,7 +5,7 @@ module.exports = {
   mode: 'development',
   entry: './src/main.js',
   output: {
-    path: path.resolve(__dirname, '../main/', 'static'),
+    path: path.resolve(__dirname, '../static'),
     filename: 'bundle.js',
   },
   devServer: {
