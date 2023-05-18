@@ -22,14 +22,14 @@
           <a class="nav-link active" aria-current="page" href="{% url 'main:cabinet' %}">My cabinet</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'main:logout' %}">Logout</a>
+          <a class="nav-link" href="{% url 'auth:logout' %}">Logout</a>
         </li>
           {% else %}
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'main:login' %}">Login</a>
+          <a class="nav-link active" aria-current="page" href="{% url 'auth:login' %}">Login</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'main:registration' %}">Sing up</a>
+          <a class="nav-link" href="{% url 'auth:registration' %}">Sing up</a>
         </li>
           {% endif %}
       </ul>
