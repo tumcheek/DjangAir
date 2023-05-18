@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
     'social_django',
+    'authentication.apps.AuthenticationConfig'
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,7 @@ ROOT_URLCONF = 'django_air_erp_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,7 +145,7 @@ EMAIL_HOST_USER = str(getenv('EMAIL'))
 EMAIL_HOST_PASSWORD = str(getenv('PASSWORD_EMAIL'))
 EMAIL_PORT = 587
 
-AUTH_USER_MODEL = 'main.PassengerModel'
+AUTH_USER_MODEL = 'authentication.PassengerModel'
 
 # CELERY SETTINGS
 CELERY_BROKER_URL = str(getenv('BROKER'))
