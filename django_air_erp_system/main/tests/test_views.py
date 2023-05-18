@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .. import models
+from authentication.models import PassengerModel
 
 
 class BaseTest(TestCase):
@@ -9,7 +10,7 @@ class BaseTest(TestCase):
         self.first_name = 'Test'
         self.last_name = 'Test'
         self.password = 'PassE228'
-        self.passenger = models.PassengerModel.objects.create_user(
+        self.passenger = PassengerModel.objects.create_user(
             email='test@t.com',
             password=self.password
         )
@@ -86,7 +87,7 @@ class BaseTest(TestCase):
             'amount': 1
         }
 
-        self.login_url = 'main:login'
+        self.login_url = 'auth:login'
         self.login_data = {
             'username': self.passenger.email,
             'password': self.password
@@ -94,17 +95,6 @@ class BaseTest(TestCase):
 
         self.passenger_cabinet_url = 'main:cabinet'
         self.passenger_cabinet_template = 'main/passenger_cabinet.html'
-
-        self.registration_url = 'main:registration'
-        self.registration_template = 'main/registration.html'
-        self.registration_data = {
-            'email': 'testemail@gmail.com',
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'password1': 'PassE228',
-            'password2': 'PassE228',
-
-        }
 
         self.user_flights_url = 'main:user_flights'
         self.user_flights = 'future_flights'
@@ -194,19 +184,3 @@ class TestGetUserFlights(BaseTest):
         self.client.post(reverse(self.login_url), data=self.login_data, format='text/html')
         response = self.client.get(reverse(self.user_flights_url, args=[self.user_flights]))
         self.assertEqual(response.status_code, 200)
-
-
-class TestRegistrationView(BaseTest):
-    def test_registration_get(self):
-        response = self.client.get(reverse(self.registration_url))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, self.registration_template)
-
-    def test_registration_invalid_post(self):
-        response = self.client.post(reverse(self.registration_url), data={})
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, self.registration_template)
-
-    def test_registration_valid_post(self):
-        response = self.client.post(reverse(self.registration_url), data=self.registration_data)
-        self.assertEqual(response.status_code, 302)

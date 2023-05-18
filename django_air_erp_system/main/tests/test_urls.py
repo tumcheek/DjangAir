@@ -60,18 +60,6 @@ class TestUrls(SimpleTestCase):
         )
         self.assertEqual(resolve(url).func.view_class, views.PaymentView)
 
-    def test_login_url(self):
-        url = reverse('main:login')
-        self.assertEqual(resolve(url).func.view_class, views.LoginView)
-
-    def test_logout_url(self):
-        url = reverse('main:logout')
-        self.assertEqual(resolve(url).func.view_class, LogoutView)
-
-    def test_registration_url(self):
-        url = reverse('main:registration')
-        self.assertEqual(resolve(url).func.view_class, views.RegistrationView)
-
     def test_cabinet_url(self):
         url = reverse('main:cabinet')
         self.assertEqual(resolve(url).func.view_class, views.PassengerCabinetView)

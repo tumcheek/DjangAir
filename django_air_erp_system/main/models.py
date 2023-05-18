@@ -1,8 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.utils.text import slugify
 
-from .managers import UserManager
+from authentication.models import PassengerModel
 
 
 class AirplaneModel(models.Model):
@@ -74,15 +73,6 @@ class FlightModel(models.Model):
 
     def __str__(self):
         return f'From {self.start_location} to {self.end_location}'
-
-
-class PassengerModel(AbstractUser):
-    username = None
-    email = models.EmailField(unique=True)
-    date_joined = models.DateTimeField(auto_now_add=True)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-    objects = UserManager()
 
 
 class OptionModel(models.Model):

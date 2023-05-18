@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LogoutView
 from django.urls import path, include
 from .import views
 
@@ -37,11 +36,6 @@ urlpatterns = [
                 ]
             )
          ),
-    path('auth/', include([
-        path('login/', views.LoginView.as_view(), name='login'),
-        path('logout/', LogoutView.as_view(), name='logout'),
-        path('registration/', views.RegistrationView.as_view(), name='registration')
-    ])),
     path('cabinet/', include([
         path('',
              login_required(views.PassengerCabinetView.as_view()),

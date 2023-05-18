@@ -14,13 +14,13 @@ from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 from django.views.generic import TemplateView
-from django.contrib.auth.views import LoginView as Login
 from django.utils import timezone
 
-from .forms import SearchFlightForm, UserLoginForm, RegistrationForm
+from .forms import SearchFlightForm
 from . import models
 from .form_validator import is_form_data_valid
 from .tasks import send_mail_task
+from authentication.models import PassengerModel
 
 ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation
 
@@ -263,7 +263,7 @@ def auto_user_registration(first_name: str, last_name: str, email: str) -> Dict[
 
 def create_passenger_ticket(
         flight: models.FlightModel,
-        passenger: models.PassengerModel,
+        passenger: PassengerModel,
         seat: models.SeatModel,
         options: List[str]
 ) -> Tuple[Dict[str, any], models.TicketModel]:
@@ -664,7 +664,7 @@ class BookView(View):
                 registration_mail_subject = get_mail_subject('registration', 'Registration')
                 send_mail_task.delay(message, email, registration_mail_subject)
 
-            passenger = models.PassengerModel.objects.get(email=email)
+            passenger = PassengerModel.objects.get(email=email)
             ticket_seat = flight.seats.get(seat_number=seat)
             ticket_context, ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
             ticket_message = render_to_string(
@@ -752,25 +752,6 @@ class CancelPayment(TemplateView):
     template_name = 'main/cancel_payment.html'
 
 
-class LoginView(Login):
-    """
-    View that handles user authentication and login.
-
-    If the user is already authenticated, redirects them to the success URL.
-
-    Parameters:
-        template_name (str): The name of the template to use for rendering the login page.
-        redirect_authenticated_user (bool): Whether to redirect authenticated users to the success URL.
-        authentication_form (class): The form to use for authenticating the user.
-
-    Returns:
-        HTTP response: A redirect to the success URL or a rendered login page.
-    """
-    template_name = 'main/login.html'
-    redirect_authenticated_user = True
-    authentication_form = UserLoginForm
-
-
 class PassengerCabinetView(View):
     """
     Renders a template for the passenger cabinet page.
@@ -793,38 +774,5 @@ class PassengerCabinetView(View):
             'last_name': user.last_name,
             'email': user.email,
             'is_user_login': True if request.user.is_authenticated else False
-        }
-        return render(request, self.template_name, context)
-
-
-class RegistrationView(View):
-    """A view for registering a new user."""
-    template_name = 'main/registration.html'
-
-    def get(self, request) -> HttpResponse:
-        """Render the registration form."""
-        form = RegistrationForm()
-        context = {
-            'form': form
-        }
-
-        return render(request, self.template_name, context)
-
-    def post(self, request) -> HttpResponse:
-        """Process the registration form."""
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            email = form.cleaned_data['email']
-            message = render_to_string(
-                'main/email_messages/user_registration_message.html',
-            )
-            registration_mail_subject = get_mail_subject('registration', 'Registration')
-            send_mail_task.delay(message, email, registration_mail_subject)
-
-            return redirect('main:cabinet')
-
-        context = {
-            'form': form
         }
         return render(request, self.template_name, context)
