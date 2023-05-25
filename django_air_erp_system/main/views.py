@@ -39,7 +39,7 @@ def get_flight_options(flight: models.FlightModel) -> List[Dict[str, Any]]:
             - description: A description of the option.
             - price: The price of the option.
     """
-    _options = flight.options.all()
+    _options = flight.options.select_related('price').all()
     options = []
     for option in _options:
         option_info = {
@@ -494,7 +494,11 @@ def get_user_flights(request: HttpRequest, user_flights: str) -> HttpResponse:
     """
     template_name = 'main/passenger_cabinet.html'
     user = request.user
-    tickets = get_user_tickets(user.ticketmodel_set.all())
+    tickets = get_user_tickets(
+        user.ticketmodel_set.
+        select_related('flight', 'seat__seat_type').
+        prefetch_related('options__price').all()
+    )
     context = {
         'first_name': user.first_name,
         'last_name': user.last_name,
@@ -526,7 +530,7 @@ def get_flights(
     Returns:
         An HTTP response with flight information rendered in a template.
     """
-    flights_query = models.FlightModel.objects.filter(
+    flights_query = models.FlightModel.objects.select_related('price').filter(
         start_location=start_location,
         end_location=end_location,
         start_date=start_date
@@ -606,7 +610,7 @@ class BookView(View):
         Returns:
             HttpResponse: A response containing the rendered HTML template.
         """
-        flight = models.FlightModel.objects.get(slug=slug_info)
+        flight = models.FlightModel.objects.select_related('price').get(slug=slug_info)
         flight_info = get_flight_info(flight)
         context = {
             'flight': flight_info,
@@ -631,7 +635,7 @@ class BookView(View):
             HttpResponse: A redirect response to the payment view or renders the flight book page with
             errors if the form is not valid.
         """
-        flight = models.FlightModel.objects.get(slug=slug_info)
+        flight = models.FlightModel.objects.select_related('price').get(slug=slug_info)
         flight_info = get_flight_info(flight)
         required_fields = ['First name[]', 'Last name[]', 'email[]']
         try:
