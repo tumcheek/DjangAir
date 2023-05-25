@@ -29,9 +29,6 @@ load_dotenv()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = str(getenv('SECRET_KEY'))
 
-# SECURITY WARNING: don't run with debug turned on in production!
-
-
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://localhost:8000/*"]
 
@@ -44,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
     'social_django',
-    'authentication.apps.AuthenticationConfig'
+    'authentication.apps.AuthenticationConfig',
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -55,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'django_air_erp_system.urls'
@@ -174,3 +173,8 @@ AUTHENTICATION_BACKENDS = (
 # GOOGLE social settings
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY'))
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET'))
+
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
