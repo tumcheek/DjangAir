@@ -1,13 +1,18 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views import View
 from django.contrib.auth.views import LoginView as Login
+from django.contrib.auth import login, logout, authenticate
 
 from .forms import RegistrationForm, UserLoginForm
 from main import tasks
 from main.views import get_mail_subject
+
+
+def staff_logout_view(request):
+    logout(request)
+    return redirect('auth:staff-login')
 
 
 class LoginView(Login):
@@ -59,4 +64,26 @@ class RegistrationView(View):
         context = {
             'form': form
         }
+        return render(request, self.template_name, context)
+
+
+class StaffLoginView(View):
+    template_name = 'authentication/staff_login.html'
+
+    def get(self, request):
+        if request.user.is_authenticated and request.user.is_staff:
+            return redirect('staff:staff-redirect')
+        return render(request, self.template_name)
+
+    def post(self, request):
+        email = request.POST['email']
+        password = request.POST['password']
+        user = authenticate(request, email=email, password=password)
+        if user is not None and user.is_staff:
+            login(request, user)
+            return redirect('staff:staff-redirect')
+        context = {
+            'message': 'Invalid email or password.'
+        }
+
         return render(request, self.template_name, context)
