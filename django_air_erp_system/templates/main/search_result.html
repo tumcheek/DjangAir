@@ -21,7 +21,7 @@
     {% endfor %}
     </div>
 
-    <a class="btn btn-info mb-3" href="{% url 'main:book_ticket' flight.slug  flight.start_date passenger_number %}">Select flight</a>
+    <a class="btn btn-info mb-3" href="{% url 'main:book_ticket' flight.slug passenger_number %}">Select flight</a>
 </div>
 {% endfor %}
 {% else %}
