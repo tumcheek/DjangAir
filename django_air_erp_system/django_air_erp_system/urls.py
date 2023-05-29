@@ -21,6 +21,8 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('auth/', include('authentication.urls')),
     path('', include('main.urls')),
+    path('staff/', include('staff.urls')),
+    path('__debug__/', include('debug_toolbar.urls')),
 ]
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
