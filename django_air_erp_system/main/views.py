@@ -410,7 +410,7 @@ def get_user_tickets(tickets: Union[QuerySet[models.TicketModel], List[models.Ti
     return _tickets
 
 
-def check_is_user_future_flights(ticket: Dict[str, Any]) -> bool:
+def check_is_future_flights(ticket: Dict[str, Any]) -> bool:
     """
     Check whether the given flight is in the future or not.
 
@@ -420,7 +420,11 @@ def check_is_user_future_flights(ticket: Dict[str, Any]) -> bool:
     Returns:
         A boolean indicating whether the flight is in the future or not.
     """
-    flight_date = datetime.strptime(ticket['start_date'], '%Y-%m-%d').date()
+    if isinstance(ticket['start_date'], str):
+        flight_date = datetime.strptime(ticket['start_date'], '%Y-%m-%d').date()
+    else:
+        flight_date = ticket['start_date']
+
     flight_time = ticket['start_time']
     now = timezone.now()
     if flight_date > now.date():
@@ -456,7 +460,7 @@ def get_location_name(request: HttpRequest) -> JsonResponse:
     return JsonResponse(word_list, safe=False)
 
 
-def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> JsonResponse:
+def book_view_api(request: HttpRequest, slug_info: str) -> JsonResponse:
     """
     Retrieve information about a flight and available seats.
 
@@ -468,7 +472,7 @@ def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> Json
     Returns:
         A JsonResponse object containing a dictionary with the flight information and available seats.
     """
-    flight = models.FlightModel.objects.filter(slug=slug_info, start_date=start_date)[0]
+    flight = models.FlightModel.objects.filter(slug=slug_info)[0]
     seats = get_all_seats(flight)
     flight_info = get_flight_info(flight)
     context = {
@@ -503,7 +507,7 @@ def get_user_flights(request: HttpRequest, user_flights: str) -> HttpResponse:
         'first_name': user.first_name,
         'last_name': user.last_name,
         'email': user.email,
-        'tickets': filter(check_is_user_future_flights, tickets) if user_flights == 'future_flights' else tickets,
+        'tickets': filter(check_is_future_flights, tickets) if user_flights == 'future_flights' else tickets,
         'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, template_name, context)
@@ -597,7 +601,7 @@ class BookView(View):
     """
     template_name = 'main/book_ticket.html'
 
-    def get(self, request, slug_info: str, start_date: str, passenger_number: int) -> HttpResponse:
+    def get(self, request, slug_info: str, passenger_number: int) -> HttpResponse:
         """
         Handles GET requests for the view.
 
@@ -616,12 +620,12 @@ class BookView(View):
             'flight': flight_info,
             'is_user_login': True if request.user.is_authenticated else False,
             'slug_info': slug_info,
-            'start_date': start_date,
+
             'passenger_number': passenger_number
         }
         return render(request, self.template_name, context)
 
-    def post(self, request, slug_info: str, start_date: str, passenger_number: int) -> HttpResponse:
+    def post(self, request, slug_info: str, passenger_number: int) -> HttpResponse:
         """
         Handles POST requests for the view.
 
@@ -646,7 +650,6 @@ class BookView(View):
             context = {
                 'flight': flight_info,
                 'slug_info': slug_info,
-                'start_date': start_date,
                 'passenger_number': passenger_number,
                 'error': e.message,
                 'is_user_login': True if request.user.is_authenticated else False
