@@ -65,7 +65,7 @@ class FlightModel(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify([self.start_location, self.end_location])
+            self.slug = slugify([self.start_location, self.end_location, str(self.start_date), str(self.start_time)])
         super(FlightModel, self).save(*args, **kwargs)
 
     class Meta:
