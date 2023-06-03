@@ -1,0 +1,14 @@
+{% extends '../base.html' %}
+{% block title %}Flights{% endblock %}
+{% block content %}
+{% if flights %}
+    {% for flight in flights %}
+        <p>
+            {{ flight.start_location }} - {{ flight.end_location }} {{ flight.start_date }} {{ flight.start_time }}
+            <a href="{% url 'staff:board-registration' flight.slug %}" class="btn btn-primary">Register ticket flights</a>
+        </p>
+    {% endfor %}
+{% else %}
+    <h2>No future flights</h2>
+{% endif %}
+{% endblock %}

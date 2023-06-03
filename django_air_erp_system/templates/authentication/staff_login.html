@@ -1,0 +1,16 @@
+{% extends '../base.html' %}
+{% block title %}Staff Login{% endblock %}
+{% block header %}{% endblock %}
+{% block content %}
+<form class="d-flex form-row flex-column align-items-center" action="{% url 'auth:staff-login' %}" method="post">
+    {% csrf_token %}
+      {% if message %}
+    <div class="col-xl-3 col-lg-8 col-sm-12 email-error">
+        <p class="text-danger">{{ message }}</p>
+    </div>
+    {% endif %}
+    <input type="text" name="email" class="col-xl-3 col-lg-8 col-sm-12 p-3" placeholder="Email" id="id_username" maxlength="254" required="">
+    <input type="password" name="password" class="col-xl-3 col-lg-8 col-sm-12 mb-3 mt-3 p-3" placeholder="Password" id="id_password" required="">
+    <button class="col-xl-3 col-lg-8 col-sm-12 btn btn-lg btn-primary btn-block mb-3" type="submit">Login</button>
+</form>
+{% endblock %}

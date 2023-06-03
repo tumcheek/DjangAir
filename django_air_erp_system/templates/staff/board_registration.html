@@ -1,0 +1,24 @@
+{% extends '../base.html' %}
+{% block title %}Staff Air{% endblock %}
+{% block content %}
+
+<div class="row">
+    <h2 class="col-12 text-center mb-3">{{ flight.start_location }} - {{ flight.end_location }}</h2>
+    <h4 class="col-12 text-center mb-3">{{ flight.start_date }} {{ flight.start_time }} - {{ flight.end_date }} {{ flight.end_time }}</h4>
+
+    <form id="form-app" class="row col-12" action="{% url 'staff:board-registration' flight.slug %}" method="post" >
+        {% if message %}
+            <div class="alert alert-danger">
+
+                <p>{{ message }}</p>
+            </div>
+        {% endif %}
+        {% csrf_token %}
+        <div class="content mx-auto">
+            <input class="col-5 p-3" name="ticket_number" type="number">
+            <button class="col-3 p-3 btn btn-primary" type="submit">Register</button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

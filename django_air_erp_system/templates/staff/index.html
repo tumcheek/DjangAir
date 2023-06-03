@@ -1,0 +1,8 @@
+{% extends '../base.html' %}
+{% block title %}Staff Air{% endblock %}
+{% block content %}
+{% if group == 'gate_managers' or group == 'supervisors' %}
+<a class="btn btn-primary" href="{% url 'staff:flights' %}">Register the boarding of the passenger </a>
+{% endif %}
+
+{% endblock %}
