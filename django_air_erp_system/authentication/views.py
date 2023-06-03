@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views import View
@@ -10,7 +10,10 @@ from main import tasks
 from main.views import get_mail_subject
 
 
-def staff_logout_view(request):
+def staff_logout_view(request: HttpRequest) -> HttpResponse:
+    """
+    Logs out the staff user and redirects to the staff login page.
+    """
     logout(request)
     return redirect('auth:staff-login')
 
@@ -68,14 +71,29 @@ class RegistrationView(View):
 
 
 class StaffLoginView(View):
+    """
+    A view class for staff login functionality.
+    """
+
     template_name = 'authentication/staff_login.html'
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        """
+        If the user is already authenticated and is a staff member,
+        they are redirected to the staff redirect page. Otherwise,
+        the staff login template is rendered.
+        """
         if request.user.is_authenticated and request.user.is_staff:
             return redirect('staff:staff-redirect')
         return render(request, self.template_name)
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> HttpResponse:
+        """
+        Authenticates the user with the provided email and password.
+        If the authentication is successful and the user is a staff member,
+        they are logged in and redirected to the staff redirect page.
+        Otherwise, an error message is displayed on the login page.
+        """
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
@@ -85,5 +103,4 @@ class StaffLoginView(View):
         context = {
             'message': 'Invalid email or password.'
         }
-
         return render(request, self.template_name, context)
