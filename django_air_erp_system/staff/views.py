@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import Group
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.decorators import method_decorator
@@ -5,9 +7,9 @@ from django.views import View
 from django.contrib.auth.decorators import user_passes_test
 
 from .models import BoardingRegistrationModel
-from .forms import BoardRegistrationForm
-from main.views import check_is_future_flights
-from main.models import FlightModel, TicketModel
+from .forms import BoardRegistrationForm, StaffRegistrationForm
+from main.views import check_is_future_flights, is_user_exist
+from main.models import FlightModel, TicketModel, PassengerModel
 
 
 GROUPS_REDIRECT = {
@@ -79,14 +81,64 @@ def staff_redirect_view(request: HttpRequest) -> HttpResponse:
     return redirect('auth:staff-login')
 
 
-def get_future_flights(request):
+@group_required(*GROUPS_REDIRECT.keys())
+def get_future_flights(request: HttpRequest, group: str) -> HttpResponse:
+    """
+    Retrieves future flights and renders them in a template.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        group (str): The group parameter.
+
+    Returns:
+        HttpResponse: The rendered response.
+
+    """
     template_name = 'staff/flights.html'
     flights = list(FlightModel.objects.values())
 
     context = {
-        'flights': list(filter(check_is_future_flights, flights))
+        'flights': list(filter(check_is_future_flights, flights)),
+        'group': group,
+        'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, template_name, context)
+
+
+@group_required('supervisors')
+def cancel_flights(request: HttpRequest, group: str, flight_slug: str) -> HttpResponse:
+    """
+    Cancels flights with the given flight_slug.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        group (str): The group parameter.
+        flight_slug (str): The slug of the flight to be cancelled.
+
+    Returns:
+        HttpResponse: The redirect response to the staff flights page.
+
+    """
+    FlightModel.objects.filter(slug=flight_slug).update(is_cancelled=True)
+    return redirect('staff:flights', group)
+
+
+@group_required('supervisors')
+def uncancel_flights(request: HttpRequest, group: str, flight_slug: str) -> HttpResponse:
+    """
+    Uncancels flights with the given flight_slug.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        group (str): The group parameter.
+        flight_slug (str): The slug of the flight to be uncanceled.
+
+    Returns:
+        HttpResponse: The redirect response to the staff flights page.
+
+    """
+    FlightModel.objects.filter(slug=flight_slug).update(is_cancelled=False)
+    return redirect('staff:flights', group)
 
 
 @method_decorator(group_required('gate_managers', 'supervisors'), name='dispatch')
@@ -156,6 +208,100 @@ class GateManagerView(View):
             HttpResponse: The HTTP response object.
         """
         context = {
-            'group': 'gate_managers'
+            'group': 'gate_managers',
+            'is_user_login': True if request.user.is_authenticated else False
+        }
+        return render(request, self.template_name, context)
+
+
+@method_decorator(group_required('supervisors'), name='dispatch')
+class SupervisorView(View):
+    template_name = 'staff/index.html'
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        """
+        Handle GET request to display the supervisor page.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The HTTP response object.
+        """
+        context = {
+            'group': 'supervisors',
+            'is_user_login': True if request.user.is_authenticated else False
+        }
+        return render(request, self.template_name, context)
+
+
+class StaffRegistrationView(View):
+    template_name = 'staff/register_staff.html'
+
+    def get(self, request, group: str) -> HttpResponse:
+        """
+        Handles GET requests for staff registration.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            group (str): The group parameter.
+
+        Returns:
+            HttpResponse: The rendered response.
+
+        """
+        form = StaffRegistrationForm
+        context = {
+            'form': form,
+            'group': group
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, group: str) -> HttpResponse:
+        """
+        Handles POST requests for staff registration.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            group (str): The group parameter.
+
+        Returns:
+            HttpResponse: The rendered response.
+
+        """
+        form = StaffRegistrationForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            group_name = form.cleaned_data['group']
+            _group = Group.objects.get(name=group_name)
+
+            if is_user_exist(email):
+                user = PassengerModel.objects.get(email=email)
+                user.is_staff = True
+                user.save()
+            else:
+                first_name = form.cleaned_data['first_name']
+                last_name = form.cleaned_data['last_name']
+                password = form.cleaned_data['password']
+
+                user = PassengerModel.objects.create(
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    password=make_password(password),
+                    is_staff=True
+                )
+
+            user.groups.add(_group)
+            context = {
+                'form': StaffRegistrationForm(),
+                'group': group
+            }
+            return render(request, self.template_name, context)
+
+        context = {
+            'form': form,
+            'group': group
         }
         return render(request, self.template_name, context)
