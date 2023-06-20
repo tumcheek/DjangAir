@@ -69,7 +69,6 @@ class BaseTest(TestCase):
         self.book_ticket_template = 'main/book_ticket.html'
         self.book_ticket_data = {
             'slug_info': self.flight.slug,
-            'start_date': self.start_date,
             'passenger_number': self.passenger_number
         }
 
@@ -102,7 +101,6 @@ class BaseTest(TestCase):
         self.book_view_api_url = 'main:book_api'
         self.book_view_api_data = {
             'slug_info': self.flight.slug,
-            'start_date': self.start_date
         }
         return super().setUp()
 

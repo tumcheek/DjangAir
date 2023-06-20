@@ -7,7 +7,7 @@ from .. import views
 
 class TestUrls(SimpleTestCase):
     def test_book_api_url(self):
-        url = reverse('main:book_api', kwargs={'slug_info': 'test', 'start_date': 'test'})
+        url = reverse('main:book_api', kwargs={'slug_info': 'test'})
         self.assertEqual(resolve(url).func, views.book_view_api)
 
     def test_index_api_url(self):
@@ -35,7 +35,6 @@ class TestUrls(SimpleTestCase):
             'main:book_ticket',
             kwargs={
                 'slug_info': 'test',
-                'start_date': 'test',
                 'passenger_number': 1,
             }
         )
