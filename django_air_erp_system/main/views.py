@@ -266,7 +266,7 @@ def create_passenger_ticket(
         passenger: PassengerModel,
         seat: models.SeatModel,
         options: List[str]
-) -> Tuple[Dict[str, any], models.TicketModel]:
+) -> models.TicketModel:
     """
     Creates a ticket for a given passenger and flight, along with any additional options selected.
     Args:
@@ -276,17 +276,6 @@ def create_passenger_ticket(
         options: A list of additional options selected for the ticket.
 
     Returns:
-        A tuple containing a dictionary of information about the created ticket and the ticket object.
-        The dictionary contains:
-            start_date: The start date of the flight.
-            start_time: The start time of the flight.
-            start_location: The starting location of the flight.
-            end_location: The ending location of the flight.
-            flight_number: The flight number.
-            first_name: The first name of the passenger.
-            last_name: The last name of the passenger.
-            seat_number: The seat number selected for the ticket.
-            ticket_number: The ticket number.
         The ticket object is an instance of TicketModel.
     """
     ticket = models.TicketModel.objects.create(
@@ -295,18 +284,82 @@ def create_passenger_ticket(
         seat=seat
     )
     ticket.options.add(*options)
+    return ticket
+
+
+def get_ticket_info(ticket: models.TicketModel) -> Dict[str, any]:
+    """
+    Retrieve ticket information.
+
+    Args:
+        ticket (Ticket): The ticket object.
+
+    Returns:
+        dict: A dictionary containing the ticket information with the following keys:
+            - 'start_date': The start date of the flight (date object).
+            - 'start_time': The start time of the flight (time object).
+            - 'start_location': The starting location of the flight (str).
+            - 'end_location': The destination of the flight (str).
+            - 'flight_number': The flight number (int).
+            - 'first_name': The first name of the passenger (str).
+            - 'last_name': The last name of the passenger (str).
+            - 'seat_number': The seat number (str).
+            - 'ticket_number': The ticket number (int).
+    """
     ticket_info = {
-        'start_date': flight.start_date,
-        'start_time': flight.start_time,
-        'start_location': flight.start_location,
-        'end_location': flight.end_location,
-        'flight_number': flight.pk,
+        'start_date': ticket.flight.start_date,
+        'start_time': ticket.flight.start_time,
+        'start_location': ticket.flight.start_location,
+        'end_location': ticket.flight.end_location,
+        'flight_number': ticket.flight.pk,
         'first_name': ticket.passenger.first_name,
         'last_name': ticket.passenger.last_name,
         'seat_number': ticket.seat.seat_number,
         'ticket_number': ticket.pk
     }
-    return ticket_info, ticket
+    return ticket_info
+
+
+def send_bill_message(flight_price: Union[float, int], options_price: Union[float, int], email: str,
+                      bill_mail_subject: str) -> None:
+    """
+    Send a bill message to the specified email address.
+
+    Args:
+        flight_price (float or int): The price of the flight.
+        options_price (float or int): The price of additional options.
+        email (str): The recipient's email address.
+        bill_mail_subject (str): The subject of the bill email.
+    """
+    bill_context = {
+        'flight_price': flight_price,
+        'options_price': options_price,
+        'total': options_price + flight_price,
+    }
+
+    bill_message = render_to_string(
+        'main/email_messages/bill.html',
+        bill_context
+    )
+
+    send_mail_task.delay(bill_message, email, bill_mail_subject)
+
+
+def send_ticket_message(ticket: models.TicketModel, email: str, ticket_mail_subject: str) -> None:
+    """
+    Send a ticket message to the specified email address.
+
+    Args:
+        ticket (Ticket): The ticket object.
+        email (str): The recipient's email address.
+        ticket_mail_subject (str): The subject of the ticket email.
+    """
+    ticket_context = get_ticket_info(ticket)
+    ticket_message = render_to_string(
+        'main/email_messages/ticket_info.html',
+        context=ticket_context
+    )
+    send_mail_task.delay(ticket_message, email, ticket_mail_subject)
 
 
 def get_mail_subject(name: str, subject: str) -> str:
@@ -656,6 +709,8 @@ class BookView(View):
             }
             return render(request, self.template_name, context)
         total = 0
+        ticket_mail_subject = get_mail_subject('ticket', 'Ticket')
+        bill_mail_subject = get_mail_subject('bill', 'Bill')
         for i in range(passenger_number):
             first_name = form.getlist('First name[]')[i]
             last_name = form.getlist('Last name[]')[i]
@@ -673,27 +728,12 @@ class BookView(View):
 
             passenger = PassengerModel.objects.get(email=email)
             ticket_seat = flight.seats.get(seat_number=seat)
-            ticket_context, ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
-            ticket_message = render_to_string(
-                'main/email_messages/ticket_info.html',
-                context=ticket_context
-            )
-            ticket_mail_subject = get_mail_subject('ticket', 'Ticket')
-            send_mail_task.delay(ticket_message, email, ticket_mail_subject)
+            ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
+            send_ticket_message(ticket, email, ticket_mail_subject)
             flight_price = flight.price.price
             options_price = get_options_price(ticket.options.all())
             total += options_price + flight_price
-            bill_context = {
-                'flight_price': flight_price,
-                'options_price': options_price,
-                'total': options_price + flight_price,
-            }
-            bill_message = render_to_string(
-                'main/email_messages/bill.html',
-                bill_context
-            )
-            bill_mail_subject = get_mail_subject('bill', 'Bill')
-            send_mail_task.delay(bill_message, email, bill_mail_subject)
+            send_bill_message(flight_price, options_price, email, bill_mail_subject)
         total = int(total*100)
         return redirect('main:payment', total=total, name=slug_info, amount=1)
 
