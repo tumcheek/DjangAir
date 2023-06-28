@@ -14,13 +14,13 @@ from django.views.decorators.http import require_http_methods
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 from django.views.generic import TemplateView
-from django.contrib.auth.views import LoginView as Login
 from django.utils import timezone
 
-from .forms import SearchFlightForm, UserLoginForm, RegistrationForm
+from .forms import SearchFlightForm
 from . import models
 from .form_validator import is_form_data_valid
 from .tasks import send_mail_task
+from authentication.models import PassengerModel
 
 ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation
 
@@ -39,7 +39,7 @@ def get_flight_options(flight: models.FlightModel) -> List[Dict[str, Any]]:
             - description: A description of the option.
             - price: The price of the option.
     """
-    _options = flight.options.all()
+    _options = flight.options.select_related('price').all()
     options = []
     for option in _options:
         option_info = {
@@ -263,10 +263,10 @@ def auto_user_registration(first_name: str, last_name: str, email: str) -> Dict[
 
 def create_passenger_ticket(
         flight: models.FlightModel,
-        passenger: models.PassengerModel,
+        passenger: PassengerModel,
         seat: models.SeatModel,
         options: List[str]
-) -> Tuple[Dict[str, any], models.TicketModel]:
+) -> models.TicketModel:
     """
     Creates a ticket for a given passenger and flight, along with any additional options selected.
     Args:
@@ -276,17 +276,6 @@ def create_passenger_ticket(
         options: A list of additional options selected for the ticket.
 
     Returns:
-        A tuple containing a dictionary of information about the created ticket and the ticket object.
-        The dictionary contains:
-            start_date: The start date of the flight.
-            start_time: The start time of the flight.
-            start_location: The starting location of the flight.
-            end_location: The ending location of the flight.
-            flight_number: The flight number.
-            first_name: The first name of the passenger.
-            last_name: The last name of the passenger.
-            seat_number: The seat number selected for the ticket.
-            ticket_number: The ticket number.
         The ticket object is an instance of TicketModel.
     """
     ticket = models.TicketModel.objects.create(
@@ -295,18 +284,82 @@ def create_passenger_ticket(
         seat=seat
     )
     ticket.options.add(*options)
+    return ticket
+
+
+def get_ticket_info(ticket: models.TicketModel) -> Dict[str, any]:
+    """
+    Retrieve ticket information.
+
+    Args:
+        ticket (Ticket): The ticket object.
+
+    Returns:
+        dict: A dictionary containing the ticket information with the following keys:
+            - 'start_date': The start date of the flight (date object).
+            - 'start_time': The start time of the flight (time object).
+            - 'start_location': The starting location of the flight (str).
+            - 'end_location': The destination of the flight (str).
+            - 'flight_number': The flight number (int).
+            - 'first_name': The first name of the passenger (str).
+            - 'last_name': The last name of the passenger (str).
+            - 'seat_number': The seat number (str).
+            - 'ticket_number': The ticket number (int).
+    """
     ticket_info = {
-        'start_date': flight.start_date,
-        'start_time': flight.start_time,
-        'start_location': flight.start_location,
-        'end_location': flight.end_location,
-        'flight_number': flight.pk,
+        'start_date': ticket.flight.start_date,
+        'start_time': ticket.flight.start_time,
+        'start_location': ticket.flight.start_location,
+        'end_location': ticket.flight.end_location,
+        'flight_number': ticket.flight.pk,
         'first_name': ticket.passenger.first_name,
         'last_name': ticket.passenger.last_name,
         'seat_number': ticket.seat.seat_number,
         'ticket_number': ticket.pk
     }
-    return ticket_info, ticket
+    return ticket_info
+
+
+def send_bill_message(flight_price: Union[float, int], options_price: Union[float, int], email: str,
+                      bill_mail_subject: str) -> None:
+    """
+    Send a bill message to the specified email address.
+
+    Args:
+        flight_price (float or int): The price of the flight.
+        options_price (float or int): The price of additional options.
+        email (str): The recipient's email address.
+        bill_mail_subject (str): The subject of the bill email.
+    """
+    bill_context = {
+        'flight_price': flight_price,
+        'options_price': options_price,
+        'total': options_price + flight_price,
+    }
+
+    bill_message = render_to_string(
+        'main/email_messages/bill.html',
+        bill_context
+    )
+
+    send_mail_task.delay(bill_message, email, bill_mail_subject)
+
+
+def send_ticket_message(ticket: models.TicketModel, email: str, ticket_mail_subject: str) -> None:
+    """
+    Send a ticket message to the specified email address.
+
+    Args:
+        ticket (Ticket): The ticket object.
+        email (str): The recipient's email address.
+        ticket_mail_subject (str): The subject of the ticket email.
+    """
+    ticket_context = get_ticket_info(ticket)
+    ticket_message = render_to_string(
+        'main/email_messages/ticket_info.html',
+        context=ticket_context
+    )
+    send_mail_task.delay(ticket_message, email, ticket_mail_subject)
 
 
 def get_mail_subject(name: str, subject: str) -> str:
@@ -410,7 +463,7 @@ def get_user_tickets(tickets: Union[QuerySet[models.TicketModel], List[models.Ti
     return _tickets
 
 
-def check_is_user_future_flights(ticket: Dict[str, Any]) -> bool:
+def check_is_future_flights(ticket: Dict[str, Any]) -> bool:
     """
     Check whether the given flight is in the future or not.
 
@@ -420,7 +473,11 @@ def check_is_user_future_flights(ticket: Dict[str, Any]) -> bool:
     Returns:
         A boolean indicating whether the flight is in the future or not.
     """
-    flight_date = datetime.strptime(ticket['start_date'], '%Y-%m-%d').date()
+    if isinstance(ticket['start_date'], str):
+        flight_date = datetime.strptime(ticket['start_date'], '%Y-%m-%d').date()
+    else:
+        flight_date = ticket['start_date']
+
     flight_time = ticket['start_time']
     now = timezone.now()
     if flight_date > now.date():
@@ -456,7 +513,7 @@ def get_location_name(request: HttpRequest) -> JsonResponse:
     return JsonResponse(word_list, safe=False)
 
 
-def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> JsonResponse:
+def book_view_api(request: HttpRequest, slug_info: str) -> JsonResponse:
     """
     Retrieve information about a flight and available seats.
 
@@ -468,7 +525,7 @@ def book_view_api(request: HttpRequest, slug_info: str, start_date: str) -> Json
     Returns:
         A JsonResponse object containing a dictionary with the flight information and available seats.
     """
-    flight = models.FlightModel.objects.filter(slug=slug_info, start_date=start_date)[0]
+    flight = models.FlightModel.objects.filter(slug=slug_info)[0]
     seats = get_all_seats(flight)
     flight_info = get_flight_info(flight)
     context = {
@@ -494,12 +551,16 @@ def get_user_flights(request: HttpRequest, user_flights: str) -> HttpResponse:
     """
     template_name = 'main/passenger_cabinet.html'
     user = request.user
-    tickets = get_user_tickets(user.ticketmodel_set.all())
+    tickets = get_user_tickets(
+        user.ticketmodel_set.
+        select_related('flight', 'seat__seat_type').
+        prefetch_related('options__price').all()
+    )
     context = {
         'first_name': user.first_name,
         'last_name': user.last_name,
         'email': user.email,
-        'tickets': filter(check_is_user_future_flights, tickets) if user_flights == 'future_flights' else tickets,
+        'tickets': filter(check_is_future_flights, tickets) if user_flights == 'future_flights' else tickets,
         'is_user_login': True if request.user.is_authenticated else False
     }
     return render(request, template_name, context)
@@ -526,7 +587,7 @@ def get_flights(
     Returns:
         An HTTP response with flight information rendered in a template.
     """
-    flights_query = models.FlightModel.objects.filter(
+    flights_query = models.FlightModel.objects.select_related('price').filter(
         start_location=start_location,
         end_location=end_location,
         start_date=start_date
@@ -593,7 +654,7 @@ class BookView(View):
     """
     template_name = 'main/book_ticket.html'
 
-    def get(self, request, slug_info: str, start_date: str, passenger_number: int) -> HttpResponse:
+    def get(self, request, slug_info: str, passenger_number: int) -> HttpResponse:
         """
         Handles GET requests for the view.
 
@@ -606,18 +667,18 @@ class BookView(View):
         Returns:
             HttpResponse: A response containing the rendered HTML template.
         """
-        flight = models.FlightModel.objects.get(slug=slug_info)
+        flight = models.FlightModel.objects.select_related('price').get(slug=slug_info)
         flight_info = get_flight_info(flight)
         context = {
             'flight': flight_info,
             'is_user_login': True if request.user.is_authenticated else False,
             'slug_info': slug_info,
-            'start_date': start_date,
+
             'passenger_number': passenger_number
         }
         return render(request, self.template_name, context)
 
-    def post(self, request, slug_info: str, start_date: str, passenger_number: int) -> HttpResponse:
+    def post(self, request, slug_info: str, passenger_number: int) -> HttpResponse:
         """
         Handles POST requests for the view.
 
@@ -631,7 +692,7 @@ class BookView(View):
             HttpResponse: A redirect response to the payment view or renders the flight book page with
             errors if the form is not valid.
         """
-        flight = models.FlightModel.objects.get(slug=slug_info)
+        flight = models.FlightModel.objects.select_related('price').get(slug=slug_info)
         flight_info = get_flight_info(flight)
         required_fields = ['First name[]', 'Last name[]', 'email[]']
         try:
@@ -642,13 +703,14 @@ class BookView(View):
             context = {
                 'flight': flight_info,
                 'slug_info': slug_info,
-                'start_date': start_date,
                 'passenger_number': passenger_number,
                 'error': e.message,
                 'is_user_login': True if request.user.is_authenticated else False
             }
             return render(request, self.template_name, context)
         total = 0
+        ticket_mail_subject = get_mail_subject('ticket', 'Ticket')
+        bill_mail_subject = get_mail_subject('bill', 'Bill')
         for i in range(passenger_number):
             first_name = form.getlist('First name[]')[i]
             last_name = form.getlist('Last name[]')[i]
@@ -664,29 +726,14 @@ class BookView(View):
                 registration_mail_subject = get_mail_subject('registration', 'Registration')
                 send_mail_task.delay(message, email, registration_mail_subject)
 
-            passenger = models.PassengerModel.objects.get(email=email)
+            passenger = PassengerModel.objects.get(email=email)
             ticket_seat = flight.seats.get(seat_number=seat)
-            ticket_context, ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
-            ticket_message = render_to_string(
-                'main/email_messages/ticket_info.html',
-                context=ticket_context
-            )
-            ticket_mail_subject = get_mail_subject('ticket', 'Ticket')
-            send_mail_task.delay(ticket_message, email, ticket_mail_subject)
+            ticket = create_passenger_ticket(flight, passenger, ticket_seat, options)
+            send_ticket_message(ticket, email, ticket_mail_subject)
             flight_price = flight.price.price
             options_price = get_options_price(ticket.options.all())
             total += options_price + flight_price
-            bill_context = {
-                'flight_price': flight_price,
-                'options_price': options_price,
-                'total': options_price + flight_price,
-            }
-            bill_message = render_to_string(
-                'main/email_messages/bill.html',
-                bill_context
-            )
-            bill_mail_subject = get_mail_subject('bill', 'Bill')
-            send_mail_task.delay(bill_message, email, bill_mail_subject)
+            send_bill_message(flight_price, options_price, email, bill_mail_subject)
         total = int(total*100)
         return redirect('main:payment', total=total, name=slug_info, amount=1)
 
@@ -752,25 +799,6 @@ class CancelPayment(TemplateView):
     template_name = 'main/cancel_payment.html'
 
 
-class LoginView(Login):
-    """
-    View that handles user authentication and login.
-
-    If the user is already authenticated, redirects them to the success URL.
-
-    Parameters:
-        template_name (str): The name of the template to use for rendering the login page.
-        redirect_authenticated_user (bool): Whether to redirect authenticated users to the success URL.
-        authentication_form (class): The form to use for authenticating the user.
-
-    Returns:
-        HTTP response: A redirect to the success URL or a rendered login page.
-    """
-    template_name = 'main/login.html'
-    redirect_authenticated_user = True
-    authentication_form = UserLoginForm
-
-
 class PassengerCabinetView(View):
     """
     Renders a template for the passenger cabinet page.
@@ -793,38 +821,5 @@ class PassengerCabinetView(View):
             'last_name': user.last_name,
             'email': user.email,
             'is_user_login': True if request.user.is_authenticated else False
-        }
-        return render(request, self.template_name, context)
-
-
-class RegistrationView(View):
-    """A view for registering a new user."""
-    template_name = 'main/registration.html'
-
-    def get(self, request) -> HttpResponse:
-        """Render the registration form."""
-        form = RegistrationForm()
-        context = {
-            'form': form
-        }
-
-        return render(request, self.template_name, context)
-
-    def post(self, request) -> HttpResponse:
-        """Process the registration form."""
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            email = form.cleaned_data['email']
-            message = render_to_string(
-                'main/email_messages/user_registration_message.html',
-            )
-            registration_mail_subject = get_mail_subject('registration', 'Registration')
-            send_mail_task.delay(message, email, registration_mail_subject)
-
-            return redirect('main:cabinet')
-
-        context = {
-            'form': form
         }
         return render(request, self.template_name, context)

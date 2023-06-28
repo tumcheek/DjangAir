@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,15 +27,10 @@ load_dotenv()
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^@#ynx=2r@s$^af44zf7l_zex@nd49a$mc+xm5$i(x%2%g+tej'
+SECRET_KEY = str(getenv('SECRET_KEY'))
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
-# Application definition
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://localhost:8000/*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,6 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'main.apps.MainConfig',
     'social_django',
+    'authentication.apps.AuthenticationConfig',
+    "debug_toolbar",
+    'staff.apps.StaffConfig'
 ]
 
 MIDDLEWARE = [
@@ -56,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'django_air_erp_system.urls'
@@ -63,7 +62,7 @@ ROOT_URLCONF = 'django_air_erp_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,7 +129,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -144,7 +148,7 @@ EMAIL_HOST_USER = str(getenv('EMAIL'))
 EMAIL_HOST_PASSWORD = str(getenv('PASSWORD_EMAIL'))
 EMAIL_PORT = 587
 
-AUTH_USER_MODEL = 'main.PassengerModel'
+AUTH_USER_MODEL = 'authentication.PassengerModel'
 
 # CELERY SETTINGS
 CELERY_BROKER_URL = str(getenv('BROKER'))
@@ -173,3 +177,8 @@ AUTHENTICATION_BACKENDS = (
 # GOOGLE social settings
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY'))
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = str(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET'))
+
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]

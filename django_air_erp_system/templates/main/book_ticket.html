@@ -6,7 +6,7 @@
     <h2 class="col-12 text-center mb-3">{{ flight.start_location }} - {{ flight.end_location }}</h2>
     <h4 class="col-12 text-center mb-3">{{ flight.start_date }} {{ flight.start_time }} - {{ flight.end_date }} {{ flight.end_time }}</h4>
 
-    <form id="form-app" class="row col-12" action="{% url 'main:book_ticket' slug_info start_date passenger_number %}" method="post" enctype="multipart/form-data">
+    <form id="form-app" class="row col-12" action="{% url 'main:book_ticket' slug_info passenger_number %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% if error %}
         <div class="alert alert-danger">
@@ -14,7 +14,7 @@
             <p>{{ error }}</p>
     </div>
         {% endif %}
-        <div data-passengers="{{ passenger_number }}" data-slug="{{ slug_info }}" data-date="{{ start_date }}" id="BookFlightForm">
+        <div data-passengers="{{ passenger_number }}" data-slug="{{ slug_info }}"  id="BookFlightForm">
         </div>
     </form>
 </div>

@@ -53,7 +53,6 @@
                 formCount:0,
                 allPassenger: parseInt(document.querySelector('#BookFlightForm').getAttribute('data-passengers')),
                 slug: document.querySelector('#BookFlightForm').getAttribute('data-slug'),
-                date: document.querySelector('#BookFlightForm').getAttribute('data-date'),
                 flight: '',
                 seatsInfo: ''
 
@@ -82,7 +81,7 @@
 
         mounted() {
 
-            fetch(`/flight/${this.slug}/${this.date}`)
+            fetch(`/flight/${this.slug}`)
             .then(response => response.json())
             .then(data => {
                 this.flight = data.flight

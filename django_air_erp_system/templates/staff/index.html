@@ -1,0 +1,10 @@
+{% extends './base_staff.html' %}
+{% block title %}Staff Air{% endblock %}
+{% block content %}
+{% if group == 'gate_managers' or group == 'supervisors' %}
+<a class="btn btn-primary" href="{% url 'staff:flights' group %}">Future flights </a>
+{% endif %}
+{% if group == 'supervisors' %}
+<a class="btn btn-primary" href="{% url 'staff:staff-registration' group %}">Register staff</a>
+{% endif %}
+{% endblock %}

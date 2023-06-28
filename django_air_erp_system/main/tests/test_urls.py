@@ -7,7 +7,7 @@ from .. import views
 
 class TestUrls(SimpleTestCase):
     def test_book_api_url(self):
-        url = reverse('main:book_api', kwargs={'slug_info': 'test', 'start_date': 'test'})
+        url = reverse('main:book_api', kwargs={'slug_info': 'test'})
         self.assertEqual(resolve(url).func, views.book_view_api)
 
     def test_index_api_url(self):
@@ -35,7 +35,6 @@ class TestUrls(SimpleTestCase):
             'main:book_ticket',
             kwargs={
                 'slug_info': 'test',
-                'start_date': 'test',
                 'passenger_number': 1,
             }
         )
@@ -59,18 +58,6 @@ class TestUrls(SimpleTestCase):
             }
         )
         self.assertEqual(resolve(url).func.view_class, views.PaymentView)
-
-    def test_login_url(self):
-        url = reverse('main:login')
-        self.assertEqual(resolve(url).func.view_class, views.LoginView)
-
-    def test_logout_url(self):
-        url = reverse('main:logout')
-        self.assertEqual(resolve(url).func.view_class, LogoutView)
-
-    def test_registration_url(self):
-        url = reverse('main:registration')
-        self.assertEqual(resolve(url).func.view_class, views.RegistrationView)
 
     def test_cabinet_url(self):
         url = reverse('main:cabinet')

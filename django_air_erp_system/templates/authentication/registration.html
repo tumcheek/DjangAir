@@ -1,7 +1,7 @@
 {% extends '../base.html' %}
 {% block title%} Registration  {% endblock %}
 {% block content %}
-<form class='row d-flex flex-column align-items-center' action="{% url 'main:registration' %}" method="post">
+<form class='row d-flex flex-column align-items-center' action="{% url 'auth:registration' %}" method="post">
   {% csrf_token %}
   {% if form.email.errors %}
     <div class="col-xl-3 col-lg-8 col-sm-12 email-error">
@@ -32,7 +32,7 @@
   {{ form.password2 }}
 
   <button class="col-xl-3 col-lg-8 col-sm-12 btn btn-success btn-lg mb-3" type="submit">Sign Up</button>
-  <p class="col-xl-3 col-lg-8 col-sm-12">Have an account? <a class="btn btn btn-primary" href="{% url 'main:login' %}">Log in</a></p>
+  <p class="col-xl-3 col-lg-8 col-sm-12">Have an account? <a class="btn btn btn-primary" href="{% url 'auth:login' %}">Log in</a></p>
 </form>
 
 {% endblock %}

@@ -1,0 +1,21 @@
+{% extends './base_staff.html' %}
+{% block title %}Flights{% endblock %}
+{% block content %}
+{% if flights %}
+    {% for flight in flights %}
+        <p>
+            {{ flight.start_location }} - {{ flight.end_location }} {{ flight.start_date }} {{ flight.start_time }}
+            <a href="{% url 'staff:board-registration' flight.slug %}" class="btn btn-primary">Register ticket flights</a>
+            {% if group == 'supervisors' %}
+                {% if flight.is_cancelled  %}
+                <a href="{% url 'staff:uncancel-flight' group flight.slug %}" class="btn btn-success">Uncancel flight</a>
+                {% else %}
+                <a href="{% url 'staff:staff-flight' group flight.slug %}" class="btn btn-danger">Cancel flight</a>
+                {% endif %}
+            {% endif %}
+        </p>
+    {% endfor %}
+{% else %}
+    <h2>No future flights</h2>
+{% endif %}
+{% endblock %}
